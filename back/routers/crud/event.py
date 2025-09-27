@@ -32,6 +32,8 @@ def get_events(
         if filters.organizer:
             query = query.filter(models.Event.organizer.ilike(f"%{filters.organizer}%"))
     
+    query = query.order_by(models.Event.rating.desc())
+
     return query.offset(skip).limit(limit).all()
 
 def get_event(db: Session, event_id: int) -> Optional[models.Event]:
