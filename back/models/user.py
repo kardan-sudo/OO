@@ -14,6 +14,5 @@ class User(Base):
     is_organizer = Column(Boolean, default=False)  # Организатор или нет
     is_representative = Column(Boolean, default=False)  # Представитель или нет
     
-    # Опционально: поля для аудита (автоматически заполняются)
     created_at = Column(Date, default=func.now())  # Дата создания
     updated_at = Column(Date, default=func.now(), onupdate=func.now())  # Дата обновления
