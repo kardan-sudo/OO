@@ -1,0 +1,94 @@
+from pydantic import BaseModel, validator
+from datetime import datetime
+from typing import List, Optional
+
+# Базовые схемы для мероприятий
+class EventBase(BaseModel):
+    title: str
+    event_type: str
+    start_date: datetime
+    end_date: datetime
+    address: str
+    x_coordinate: float
+    y_coordinate: float
+    organizer: str
+    description: Optional[str] = None
+
+    @validator('end_date')
+    def end_date_must_be_after_start_date(cls, v, values):
+        if 'start_date' in values and v <= values['start_date']:
+            raise ValueError('End date must be after start date')
+        return v
+
+class EventCreate(EventBase):
+    pass
+
+class EventUpdate(BaseModel):
+    title: Optional[str] = None
+    event_type: Optional[str] = None
+    start_date: Optional[datetime] = None
+    end_date: Optional[datetime] = None
+    address: Optional[str] = None
+    x_coordinate: Optional[float] = None
+    y_coordinate: Optional[float] = None
+    organizer: Optional[str] = None
+    description: Optional[str] = None
+
+class Event(EventBase):
+    id: int
+    rating: float
+    
+    class Config:
+        orm_mode = True
+
+# Схемы для оценок
+class RatingBase(BaseModel):
+    rating: int
+
+    @validator('rating')
+    def rating_must_be_between_1_and_5(cls, v):
+        if v < 1 or v > 5:
+            raise ValueError('Rating must be between 1 and 5')
+        return v
+
+class RatingCreate(RatingBase):
+    event_id: int
+    user_id: int
+
+class Rating(RatingBase):
+    id: int
+    event_id: int
+    user_id: int
+    
+    class Config:
+        orm_mode = True
+
+# Схемы для комментариев
+class CommentBase(BaseModel):
+    comment_text: str
+
+class CommentCreate(CommentBase):
+    event_id: int
+    user_id: int
+
+class Comment(CommentBase):
+    id: int
+    event_id: int
+    user_id: int
+    created_at: datetime
+    
+    class Config:
+        orm_mode = True
+
+# Схемы для ответов с детализацией
+class EventDetail(Event):
+    ratings: List[Rating] = []
+    comments: List[Comment] = []
+
+# Схемы для фильтрации
+class EventFilter(BaseModel):
+    event_type: Optional[str] = None
+    start_date_from: Optional[datetime] = None
+    start_date_to: Optional[datetime] = None
+    min_rating: Optional[float] = None
+    organizer: Optional[str] = None
