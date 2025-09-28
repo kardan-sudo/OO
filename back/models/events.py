@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, String, Float, DateTime, Text, ForeignKey, event
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-from database import Base
+from back.database.database import Base
 
 class Event(Base):
     __tablename__ = "events"
