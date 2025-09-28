@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from back.routers.routers import event_router
+from back.routers.api.event import event_router
 
 app = FastAPI()
 

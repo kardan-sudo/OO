@@ -3,17 +3,21 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 from datetime import datetime
 import back.models
-import back.schemas
-import crud
-from back.database import SessionLocal, engine, get_db
-from routers.routers import event_router
+from back.schemas import events
+import back.routers.crud
+from back.database.database import  engine, get_db
+
+from fastapi import APIRouter
+
+event_router = APIRouter()  # Определение роутера здесь
+
 
 # Роуты для мероприятий
-@event_router.post("/events/", response_model=schemas.events.Event, status_code=status.HTTP_201_CREATED)
-def create_event(event: schemas.events.EventCreate, db: Session = Depends(get_db)):
+@event_router.post("/events/", response_model=events.Event, status_code=status.HTTP_201_CREATED)
+def create_event(event: events.EventCreate, db: Session = Depends(get_db)):
     return crud.create_event(db=db, event=event)
 
-@event_router.get("/events/", response_model=List[schemas.events.Event])
+@event_router.get("/events/", response_model=List[events.Event])
 def read_events(
     skip: int = 0,
     limit: int = 100,
@@ -24,7 +28,7 @@ def read_events(
     organizer: Optional[str] = Query(None, description="Организатор"),
     db: Session = Depends(get_db)
 ):
-    filters = schemas.events.EventFilter(
+    filters = events.EventFilter(
         event_type=event_type,
         start_date_from=start_date_from,
         start_date_to=start_date_to,
@@ -34,7 +38,7 @@ def read_events(
     events = crud.get_events(db, skip=skip, limit=limit, filters=filters)
     return events
 
-@event_router.get("/events/{event_id}", response_model=schemas.events.EventDetail)
+@event_router.get("/events/{event_id}", response_model=events.EventDetail)
 def read_event(event_id: int, db: Session = Depends(get_db)):
     db_event = crud.get_event(db, event_id=event_id)
     if db_event is None:
@@ -42,8 +46,8 @@ def read_event(event_id: int, db: Session = Depends(get_db)):
     return db_event
 
 # Роуты для оценок
-@event_router.post("/ratings/", response_model=schemas.events.Rating, status_code=status.HTTP_201_CREATED)
-def create_rating(rating: schemas.events.RatingCreate, db: Session = Depends(get_db)):
+@event_router.post("/ratings/", response_model=events.Rating, status_code=status.HTTP_201_CREATED)
+def create_rating(rating: events.RatingCreate, db: Session = Depends(get_db)):
     db_rating = crud.create_rating(db=db, rating=rating)
     if db_rating is None:
         raise HTTPException(status_code=404, detail="Event not found")
@@ -55,14 +59,14 @@ def create_rating(rating: schemas.events.RatingCreate, db: Session = Depends(get
 #     return ratings
 
 # Роуты для комментариев
-@event_router.post("/comments/", response_model=schemas.events.Comment, status_code=status.HTTP_201_CREATED)
-def create_comment(comment: schemas.events.CommentCreate, db: Session = Depends(get_db)):
+@event_router.post("/comments/", response_model=events.Comment, status_code=status.HTTP_201_CREATED)
+def create_comment(comment: events.CommentCreate, db: Session = Depends(get_db)):
     db_comment = crud.create_comment(db=db, comment=comment)
     if db_comment is None:
         raise HTTPException(status_code=404, detail="Event not found")
     return db_comment
 
-@event_router.get("/events/{event_id}/comments", response_model=List[schemas.events.Comment])
+@event_router.get("/events/{event_id}/comments", response_model=List[events.Comment])
 def read_event_comments(event_id: int, db: Session = Depends(get_db)):
     comments = crud.get_comments_by_event(db, event_id=event_id)
     return comments
