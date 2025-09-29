@@ -43,7 +43,7 @@ async def read_event(event_id: int, db: AsyncSession = Depends(get_db)):  # До
         raise HTTPException(status_code=404, detail="Event not found")
     return db_event
 
-@event_router.get("/events/current", response_model=List[events_schemas.EventResponse])
+@event_router.get("/events/top_current", response_model=List[events_schemas.EventResponse])
 async def get_current_events(
     db: AsyncSession = Depends(get_db),
     skip: int = Query(0, ge=0, description="Количество записей для пропуска"),
