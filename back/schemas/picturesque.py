@@ -43,3 +43,23 @@ class ScenicSpotUpdate(BaseModel):
     entrance_fee: Optional[str] = None
     website: Optional[str] = None
     phone: Optional[str] = None
+
+class ScenicSpotResponse(ScenicSpotBase):
+    id: int
+    is_verified: bool
+    
+    class Config:
+        from_attributes = True
+
+class ScenicSpotList(BaseModel):
+    items: List[ScenicSpotResponse]
+    total: int
+    page: int
+    size: int
+    pages: int
+    
+class ScenicSpotVerifyUpdate(BaseModel):
+    is_verified: bool
+
+class ScenicSpotAdminUpdate(ScenicSpotVerifyUpdate):
+    is_active: Optional[bool] = None
