@@ -9,6 +9,7 @@ from schemas.picturesque import (
     ScenicSpotCreate, 
     ScenicSpotResponse, 
     ScenicSpotList,
+    ScenicSpotVerifyUpdate,
     SpotType as SpotTypeSchema
 )
 from routers.crud.picturesque import scenic_spot_crud
@@ -18,8 +19,8 @@ picturesque_router = APIRouter(prefix="/scenic-spots", tags=["scenic-spots"])
 @picturesque_router.get("/", response_model=ScenicSpotList)
 async def read_scenic_spots(
     db: AsyncSession = Depends(get_db),
-    skip: int = Query(0, ge=0, description="Смещение"),
-    limit: int = Query(20, ge=1, le=100, description="Лимит"),
+    skip: Optional[int] = Query(0, ge=0, description="Смещение"),
+    limit: Optional[int] = Query(20, ge=1, le=100, description="Лимит"),
     spot_type: Optional[SpotTypeSchema] = Query(None, description="Фильтр по типу места"),
     only_verified: bool = Query(True, description="Только проверенные места")
 ):
@@ -71,3 +72,33 @@ async def create_scenic_spot(
     
     db_spot = await scenic_spot_crud.create_scenic_spot(db, spot.dict())
     return db_spot
+
+@picturesque_router.patch("/{spot_id}/verify", response_model=ScenicSpotResponse)
+async def verify_scenic_spot(
+    spot_id: int,
+    verify_data: ScenicSpotVerifyUpdate,
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Изменить статус верификации живописного места
+    Требуются права администратора/модератора
+    """
+    # Проверяем существование места
+    existing_spot = await scenic_spot_crud.get_scenic_spot(db, spot_id)
+    if not existing_spot:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Живописное место не найдено"
+        )
+    
+    # Обновляем статус верификации
+    updated_spot = await scenic_spot_crud.update_scenic_spot(
+        db=db,
+        spot_id=spot_id,
+        update_data={"is_verified": verify_data.is_verified}
+    )
+    
+    return updated_spot
+
+
+#нужна ручка только для неподтвержденных!!!

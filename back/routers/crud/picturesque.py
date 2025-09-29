@@ -1,5 +1,5 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func
+from sqlalchemy import select, func, update
 from typing import List, Optional
 from back.models.picturesque import ScenicSpot
 
@@ -52,5 +52,29 @@ class ScenicSpotCRUD:
         await db.commit()
         await db.refresh(scenic_spot)
         return scenic_spot
+    
+    async def update_scenic_spot(
+        self, 
+        db: AsyncSession, 
+        spot_id: int, 
+        update_data: dict
+    ) -> Optional[ScenicSpot]:
+        # Сначала проверяем существование места
+        spot = await self.get_scenic_spot(db, spot_id)
+        if not spot:
+            return None
+            
+        # Обновляем поля
+        stmt = (
+            update(ScenicSpot)
+            .where(ScenicSpot.id == spot_id)
+            .values(**update_data)
+        )
+        await db.execute(stmt)
+        await db.commit()
+        
+        # Возвращаем обновленный объект
+        return await self.get_scenic_spot(db, spot_id)
+
 
 scenic_spot_crud = ScenicSpotCRUD()
