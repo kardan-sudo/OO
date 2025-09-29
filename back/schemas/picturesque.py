@@ -1,0 +1,45 @@
+from pydantic import BaseModel
+from datetime import datetime
+from typing import Optional, List
+from enum import Enum
+
+class SpotType(str, Enum):
+    PARK = "park"
+    ESTATE = "estate"
+    CASTLE = "castle"
+    MONUMENT = "monument"
+    NATURAL = "natural"
+    HISTORICAL = "historical"
+    ARCHITECTURAL = "architectural"
+    RELIGIOUS = "religious"
+
+class ScenicSpotBase(BaseModel):
+    title: str
+    spot_type: SpotType
+    address: str
+    latitude: float
+    longitude: float
+    description: Optional[str] = None
+    short_description: Optional[str] = None
+    history: Optional[str] = None
+    opening_hours: Optional[str] = None
+    entrance_fee: Optional[str] = None
+    website: Optional[str] = None
+    phone: Optional[str] = None
+
+class ScenicSpotCreate(ScenicSpotBase):
+    pass
+
+class ScenicSpotUpdate(BaseModel):
+    title: Optional[str] = None
+    spot_type: Optional[SpotType] = None
+    address: Optional[str] = None
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    description: Optional[str] = None
+    short_description: Optional[str] = None
+    history: Optional[str] = None
+    opening_hours: Optional[str] = None
+    entrance_fee: Optional[str] = None
+    website: Optional[str] = None
+    phone: Optional[str] = None
