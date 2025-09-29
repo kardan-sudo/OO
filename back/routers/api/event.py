@@ -47,8 +47,7 @@ async def read_event(event_id: int, db: AsyncSession = Depends(get_db)):  # До
 async def get_current_events(
     db: AsyncSession = Depends(get_db),
     skip: int = Query(0, ge=0, description="Количество записей для пропуска"),
-    limit: int = Query(10, ge=1, le=100, description="Количество записей для возврата"),
-    event_type: Optional[str] = Query(None, description="Фильтр по типу мероприятия")
+    limit: int = Query(10, ge=1, le=100, description="Количество записей для возврата")
 ):
     """
     Получить мероприятия, которые проводятся в данный момент,
