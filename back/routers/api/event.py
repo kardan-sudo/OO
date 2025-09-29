@@ -1,8 +1,9 @@
 from fastapi import Depends, HTTPException, status, Query, APIRouter
 from sqlalchemy.ext.asyncio import AsyncSession  # Изменено для async
+from sqlalchemy import select
 from typing import List, Optional
 from datetime import datetime
-import back.models
+import back.models as models
 from back.schemas import events as events_schemas
 from back.routers.crud import event as event_crud
 from back.database.database import engine, get_db
@@ -41,6 +42,31 @@ async def read_event(event_id: int, db: AsyncSession = Depends(get_db)):  # До
     if db_event is None:
         raise HTTPException(status_code=404, detail="Event not found")
     return db_event
+
+@event_router.get("/events/current", response_model=List[events_schemas.EventResponse])
+async def get_current_events(
+    db: AsyncSession = Depends(get_db),
+    skip: int = Query(0, ge=0, description="Количество записей для пропуска"),
+    limit: int = Query(10, ge=1, le=100, description="Количество записей для возврата"),
+    event_type: Optional[str] = Query(None, description="Фильтр по типу мероприятия")
+):
+    """
+    Получить мероприятия, которые проводятся в данный момент,
+    отсортированные по убыванию рейтинга
+    """
+    current_time = datetime.now()
+    
+    # Строим базовый запрос
+    query = select(models.Event).where(
+        models.Event.start_date <= current_time,
+        models.Event.end_date >= current_time
+    )
+    query = query.order_by(models.Event.rating.desc()).offset(skip).limit(limit)
+    
+    result = await db.execute(query)
+    events = result.scalars().all()
+    
+    return events
 
 # Роуты для оценок
 @event_router.post("/ratings/", response_model=events_schemas.Rating, status_code=status.HTTP_201_CREATED)

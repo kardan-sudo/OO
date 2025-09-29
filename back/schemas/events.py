@@ -2,7 +2,23 @@ from pydantic import BaseModel, validator
 from datetime import datetime
 from typing import List, Optional
 
-# Базовые схемы для мероприятий
+
+class EventResponse(BaseModel):
+    id: int
+    title: str
+    event_type: str
+    start_date: datetime
+    end_date: datetime
+    address: str
+    x_coordinate: float
+    y_coordinate: float
+    rating: float
+    organizer: str
+    description: Optional[str] = None
+    
+    class Config:
+        from_attributes = True
+
 class EventBase(BaseModel):
     title: str
     event_type: str
