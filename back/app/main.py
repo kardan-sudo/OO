@@ -8,6 +8,7 @@ from datetime import date
 from database.database import engine
 from routers.crud import broadcast as cast_crud
 
+
 app = FastAPI()
 
 app.include_router(event_router)

@@ -1,20 +1,21 @@
-from fastapi import Depends, HTTPException, status, Query
-from sqlalchemy.orm import Session
+from fastapi import Depends, HTTPException, status, Query, APIRouter
+from sqlalchemy.ext.asyncio import AsyncSession  # Изменено для async
 from typing import List, Optional
 from datetime import datetime
 import back.models
-import back.schemas
-import crud
-from back.database import SessionLocal, engine, get_db
-from routers.routers import event_router
+from back.schemas import events as events_schemas
+from back.routers.crud import event as event_crud
+from back.database.database import engine, get_db
+
+event_router = APIRouter()  # Определение роутера здесь
 
 # Роуты для мероприятий
-@event_router.post("/events/", response_model=schemas.events.Event, status_code=status.HTTP_201_CREATED)
-def create_event(event: schemas.events.EventCreate, db: Session = Depends(get_db)):
-    return crud.create_event(db=db, event=event)
+@event_router.post("/events/", response_model=events_schemas.Event, status_code=status.HTTP_201_CREATED)
+async def create_event(event: events_schemas.EventCreate, db: AsyncSession = Depends(get_db)):  # Добавлено async, изменён тип db
+    return await event_crud.create_event(db=db, event=event)  # Добавлено await
 
-@event_router.get("/events/", response_model=List[schemas.events.Event])
-def read_events(
+@event_router.get("/events/", response_model=List[events_schemas.Event])
+async def read_events(  # Добавлено async
     skip: int = 0,
     limit: int = 100,
     event_type: Optional[str] = Query(None, description="Тип мероприятия"),
@@ -22,54 +23,53 @@ def read_events(
     start_date_to: Optional[datetime] = Query(None, description="Конец периода"),
     min_rating: Optional[float] = Query(None, ge=0, le=5, description="Минимальный рейтинг"),
     organizer: Optional[str] = Query(None, description="Организатор"),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)  # Изменён тип db
 ):
-    filters = schemas.events.EventFilter(
+    filters = events_schemas.EventFilter(
         event_type=event_type,
         start_date_from=start_date_from,
         start_date_to=start_date_to,
         min_rating=min_rating,
         organizer=organizer
     )
-    events = crud.get_events(db, skip=skip, limit=limit, filters=filters)
+    events = await event_crud.get_events(db, skip=skip, limit=limit, filters=filters)  # Добавлено await
     return events
 
-@event_router.get("/events/{event_id}", response_model=schemas.events.EventDetail)
-def read_event(event_id: int, db: Session = Depends(get_db)):
-    db_event = crud.get_event(db, event_id=event_id)
+@event_router.get("/events/{event_id}", response_model=events_schemas.EventDetail)
+async def read_event(event_id: int, db: AsyncSession = Depends(get_db)):  # Добавлено async, изменён тип db
+    db_event = await event_crud.get_event(db, event_id=event_id)  # Добавлено await
     if db_event is None:
         raise HTTPException(status_code=404, detail="Event not found")
     return db_event
 
 # Роуты для оценок
-@event_router.post("/ratings/", response_model=schemas.events.Rating, status_code=status.HTTP_201_CREATED)
-def create_rating(rating: schemas.events.RatingCreate, db: Session = Depends(get_db)):
-    db_rating = crud.create_rating(db=db, rating=rating)
+@event_router.post("/ratings/", response_model=events_schemas.Rating, status_code=status.HTTP_201_CREATED)
+async def create_rating(rating: events_schemas.RatingCreate, db: AsyncSession = Depends(get_db)):  # Добавлено async, изменён тип db
+    db_rating = await event_crud.create_rating(db=db, rating=rating)  # Добавлено await
     if db_rating is None:
         raise HTTPException(status_code=404, detail="Event not found")
     return db_rating
 
-# @event_router.get("/events/{event_id}/ratings", response_model=List[schemas.Rating])
-# def read_event_ratings(event_id: int, db: Session = Depends(get_db)):
-#     ratings = crud.get_ratings_by_event(db, event_id=event_id)
-#     return ratings
-
 # Роуты для комментариев
-@event_router.post("/comments/", response_model=schemas.events.Comment, status_code=status.HTTP_201_CREATED)
-def create_comment(comment: schemas.events.CommentCreate, db: Session = Depends(get_db)):
-    db_comment = crud.create_comment(db=db, comment=comment)
+@event_router.post("/comments/", response_model=events_schemas.Comment, status_code=status.HTTP_201_CREATED)
+async def create_comment(comment: events_schemas.CommentCreate, db: AsyncSession = Depends(get_db)):  # Добавлено async, изменён тип db
+    db_comment = await event_crud.create_comment(db=db, comment=comment)  # Добавлено await
     if db_comment is None:
         raise HTTPException(status_code=404, detail="Event not found")
     return db_comment
 
-@event_router.get("/events/{event_id}/comments", response_model=List[schemas.events.Comment])
-def read_event_comments(event_id: int, db: Session = Depends(get_db)):
-    comments = crud.get_comments_by_event(db, event_id=event_id)
+@event_router.get("/events/{event_id}/comments", response_model=List[events_schemas.Comment])
+async def read_event_comments(event_id: int, db: AsyncSession = Depends(get_db)):  # Добавлено async, изменён тип db
+    comments = await event_crud.get_comments_by_event(db, event_id=event_id)  # Добавлено await
     return comments
 
 @event_router.delete("/comments/{comment_id}")
-def delete_comment(comment_id: int, user_id: int = Query(..., description="ID пользователя"), db: Session = Depends(get_db)):
-    success = crud.delete_comment(db, comment_id=comment_id, user_id=user_id)
+async def delete_comment(  # Добавлено async
+    comment_id: int, 
+    user_id: int = Query(..., description="ID пользователя"), 
+    db: AsyncSession = Depends(get_db)  # Изменён тип db
+):
+    success = await event_crud.delete_comment(db, comment_id=comment_id, user_id=user_id)  # Добавлено await
     if not success:
         raise HTTPException(status_code=404, detail="Comment not found or you don't have permission to delete it")
     return {"message": "Comment deleted successfully"}
