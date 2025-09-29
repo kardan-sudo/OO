@@ -1,5 +1,6 @@
 from fastapi import FastAPI
-from back.routers.routers import event_router
+from back.routers.api.event import event_router
+from back.routers.api.picturesque import picturesque_router
 from utils.sender import email_sender
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
@@ -12,6 +13,7 @@ from routers.crud import broadcast as cast_crud
 app = FastAPI()
 
 app.include_router(event_router)
+app.include_router(picturesque_router)
 
 def check_memorial_dates():
     """Ежедневная проверка памятных дат"""

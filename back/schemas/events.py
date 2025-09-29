@@ -14,6 +14,8 @@ class EventResponse(BaseModel):
     y_coordinate: float
     rating: float
     organizer: str
+    website: str
+    phone: str
     description: Optional[str] = None
     
     class Config:
@@ -29,6 +31,8 @@ class EventBase(BaseModel):
     y_coordinate: float
     organizer: str
     description: Optional[str] = None
+    website: str
+    phone: str
 
     @validator('end_date')
     def end_date_must_be_after_start_date(cls, v, values):
