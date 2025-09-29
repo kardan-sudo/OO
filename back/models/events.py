@@ -17,6 +17,8 @@ class Event(Base):
     rating = Column(Float, default=0.0)
     organizer = Column(String(150), nullable=False)
     description = Column(Text)
+    website = Column(String(200))
+    phone = Column(String(20))
     
     ratings = relationship("Rating", back_populates="event", cascade="all, delete")
     comments = relationship("Comment", back_populates="event", cascade="all, delete")
