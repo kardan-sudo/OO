@@ -9,14 +9,14 @@ from schemas import events as events_schemas
 from routers.crud.event import event_crud
 from database.database import get_db
 
-event_router = APIRouter()
+event_router = APIRouter(prefix="/events", tags=["events"])
 
 # Роуты для мероприятий
-@event_router.post("/events/", response_model=events_schemas.Event, status_code=status.HTTP_201_CREATED)
+@event_router.post("/", response_model=events_schemas.Event, status_code=status.HTTP_201_CREATED)
 async def create_event(event: events_schemas.EventCreate, db: AsyncSession = Depends(get_db)):  # Добавлено async, изменён тип db
     return await event_crud.create_event(db=db, event_obj=event)  # Добавлено await
 
-@event_router.get("/events/", response_model=List[events_schemas.Event])
+@event_router.get("/", response_model=List[events_schemas.Event])
 async def read_events(  # Добавлено async
     skip: int = 0,
     limit: int = 100,
@@ -37,14 +37,14 @@ async def read_events(  # Добавлено async
     events = await event_crud.get_events(db, skip=skip, limit=limit, filters=filters)  # Добавлено await
     return events
 
-@event_router.get("/events/{event_id}", response_model=events_schemas.EventDetail)
+@event_router.get("/{event_id}", response_model=events_schemas.EventDetail)
 async def read_event(event_id: int, db: AsyncSession = Depends(get_db)):  # Добавлено async, изменён тип db
     db_event = await event_crud.get_event(db, event_id=event_id)  # Добавлено await
     if db_event is None:
         raise HTTPException(status_code=404, detail="Event not found")
     return db_event
 
-@event_router.get("/events/top_current", response_model=List[events_schemas.EventResponse])
+@event_router.get("/top_current", response_model=List[events_schemas.EventResponse])
 async def get_current_events(
     db: AsyncSession = Depends(get_db),
     skip: int = Query(0, ge=0, description="Количество записей для пропуска"),
@@ -152,7 +152,7 @@ async def create_comment(comment: events_schemas.CommentCreate, db: AsyncSession
         raise HTTPException(status_code=404, detail="Event not found")
     return db_comment
 
-@event_router.get("/events/{event_id}/comments", response_model=List[events_schemas.Comment])
+@event_router.get("/{event_id}/comments", response_model=List[events_schemas.Comment])
 async def read_event_comments(event_id: int, db: AsyncSession = Depends(get_db)):  # Добавлено async, изменён тип db
     comments = await event_crud.get_comments_by_event(db, event_id=event_id)  # Добавлено await
     return comments
