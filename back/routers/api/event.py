@@ -4,10 +4,10 @@ from sqlalchemy.ext.asyncio import AsyncSession  # Изменено для async
 from sqlalchemy import select
 from typing import List, Optional
 from datetime import datetime
-import back.models as models
-from back.schemas import events as events_schemas
-from back.routers.crud import event as event_crud
-from back.database.database import engine, get_db
+import models as models
+from schemas import events as events_schemas
+from routers.crud import event as event_crud
+from database.database import engine, get_db
 
 event_router = APIRouter()
 
