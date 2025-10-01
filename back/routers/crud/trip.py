@@ -35,10 +35,6 @@ class WalkingRouteCRUD:
         if filters:
             conditions = []
             
-            # Фильтр по проверенным
-            if filters.only_verified:
-                conditions.append(WalkingRoute.is_verified == True)
-            
             # Фильтр по протяженности
             if filters.min_distance is not None:
                 conditions.append(WalkingRoute.distance_km >= filters.min_distance)
@@ -62,7 +58,6 @@ class WalkingRouteCRUD:
             if conditions:
                 stmt = stmt.where(and_(*conditions))
         
-        stmt = stmt.order_by(WalkingRoute.created_at.desc())
         result = await db.execute(stmt)
         return list(result.scalars().all())
 
@@ -75,9 +70,6 @@ class WalkingRouteCRUD:
         
         if filters:
             conditions = []
-            
-            if filters.only_verified:
-                conditions.append(WalkingRoute.is_verified == True)
             
             if filters.min_distance is not None:
                 conditions.append(WalkingRoute.distance_km >= filters.min_distance)

@@ -10,6 +10,8 @@ from models.events import Event, Rating, Comment
 from models.broadcast import MemorialDate
 from models.picturesque import ScenicSpot
 from models.achievement import Achievement
+from models.quiz import Quiz, Question, Answer
+from models.trip import WalkingRoute
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

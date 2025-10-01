@@ -31,15 +31,12 @@ async def create_walking_route(
 @walking_route_router.get("/", response_model=WalkingRouteListResponse)
 async def get_walking_routes(
     db: AsyncSession = Depends(get_db),
-    skip: int = Query(0, ge=0, description="Смещение"),
-    limit: int = Query(20, ge=1, le=100, description="Лимит"),
     min_distance: Optional[float] = Query(None, ge=0, description="Минимальная протяженность (км)"),
     max_distance: Optional[float] = Query(None, ge=0, description="Максимальная протяженность (км)"),
     min_duration: Optional[int] = Query(None, ge=0, description="Минимальное время (мин)"),
     max_duration: Optional[int] = Query(None, ge=0, description="Максимальное время (мин)"),
     min_points: Optional[int] = Query(None, ge=0, description="Минимальное количество интересных мест"),
     difficulty: Optional[str] = Query(None, description="Сложность маршрута (easy, medium, hard)"),
-    only_verified: bool = Query(True, description="Только проверенные маршруты"),
 ):
     """
     Получить список прогулочных маршрутов с фильтрацией
@@ -52,13 +49,10 @@ async def get_walking_routes(
         max_duration=max_duration,
         min_points=min_points,
         difficulty=difficulty,
-        only_verified=only_verified
     )
     
     routes = await walking_routes_crud.get_walking_routes(
         db=db,
-        skip=skip,
-        limit=limit,
         filters=filters
     )
     
@@ -67,7 +61,4 @@ async def get_walking_routes(
     return WalkingRouteListResponse(
         items=routes,
         total=total,
-        page=skip // limit + 1,
-        size=limit,
-        pages=(total + limit - 1) // limit
     )

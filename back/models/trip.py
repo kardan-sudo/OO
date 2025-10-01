@@ -1,8 +1,6 @@
-from sqlalchemy import Column, Integer, String, Float, Text, Boolean, DateTime
+from sqlalchemy import Column, Integer, String, Float, Text
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.sql import func
-
-Base = declarative_base()
+from database.database import Base
 
 class WalkingRoute(Base):
     __tablename__ = "walking_routes"
