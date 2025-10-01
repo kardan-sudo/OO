@@ -1,3 +1,4 @@
+from requests import Response
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -110,3 +111,20 @@ async def verify_scenic_spot(
     )
     
     return updated_spot
+
+@picturesque_router.delete("/{spot_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_scenic_spot(
+    spot_id: int,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Удалить живописное место по ID
+    """
+    success = await scenic_spot_crud.delete_scenic_spot(db, spot_id)
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Scenic spot not found"
+        )
+    
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

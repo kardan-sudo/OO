@@ -1,5 +1,5 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, update
+from sqlalchemy import select, func, update, delete
 from typing import List, Optional
 from back.models.picturesque import ScenicSpot
 
@@ -104,5 +104,21 @@ class ScenicSpotCRUD:
         result = await db.execute(query)
         return result.scalar_one()
 
+    async def delete_scenic_spot(self, db: AsyncSession, spot_id: int) -> bool:
+        """
+        Удалить живописное место по ID
+        Возвращает True если удалено, False если не найдено
+        """
+        # Сначала проверяем существование места
+        spot = await self.get_scenic_spot(db, spot_id)
+        if not spot:
+            return False
+        
+        # Выполняем удаление
+        stmt = delete(ScenicSpot).where(ScenicSpot.id == spot_id)
+        await db.execute(stmt)
+        await db.commit()
+        
+        return True
 
 scenic_spot_crud = ScenicSpotCRUD()
