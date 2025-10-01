@@ -23,8 +23,6 @@ class User(Base):
     is_representative = Column(Boolean, default=False)  # Представитель или нет
     last_login = Column(Date, nullable=True)  # Дата последнего входа
     consecutive_days = Column(Integer, default=0)  # Дни подряд
-    created_at = Column(Date, default=func.now())  # Дата создания
-    updated_at = Column(Date, default=func.now(), onupdate=func.now())  # Дата обновления
 
     # Relationship для достижений (many-to-many)
     achievements = relationship(
