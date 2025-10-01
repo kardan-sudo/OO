@@ -39,9 +39,7 @@ class WalkingRouteResponse(WalkingRouteBase):
 class WalkingRouteListResponse(BaseModel):
     items: List[WalkingRouteResponse]
     total: int
-    page: int
-    size: int
-    pages: int
+
 
 class RouteFilter(BaseModel):
     min_distance: Optional[float] = Field(None, ge=0, description="Минимальная протяженность")
