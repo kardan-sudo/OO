@@ -100,3 +100,5 @@ class WalkingRouteCRUD:
         
         result = await db.execute(stmt)
         return result.scalar_one()
+    
+walking_routes_crud = WalkingRouteCRUD()
