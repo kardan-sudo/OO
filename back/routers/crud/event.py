@@ -7,7 +7,7 @@ from typing import List, Optional
 # CRUD для мероприятий
 
 class EventCRUD:
-    async def create_event(db: AsyncSession, event_obj: events.EventCreate) -> Event:
+    async def create_event(self, db: AsyncSession, event_obj: events.EventCreate) -> Event:  # Добавлен self
         db_event = Event(**event_obj.dict())
         db.add(db_event)
         await db.commit()
@@ -15,6 +15,7 @@ class EventCRUD:
         return db_event
 
     async def get_events(
+        self,  # Добавлен self
         db: AsyncSession, 
         skip: int = 0, 
         limit: int = 100,
@@ -42,13 +43,13 @@ class EventCRUD:
         result = await db.execute(stmt)
         return list(result.scalars().all())  # Возвращаем список объектов
 
-    async def get_event(db: AsyncSession, event_id: int) -> Optional[Event]:
+    async def get_event(self, db: AsyncSession, event_id: int) -> Optional[Event]:  # Добавлен self
         stmt = select(Event).filter(Event.id == event_id)
         result = await db.execute(stmt)
         return result.scalar_one_or_none()  # Или .first() если используете scalars()
     
     async def get_unverified_events(
-        self, 
+        self,  # Уже есть
         db: AsyncSession, 
         skip: int = 0, 
         limit: int = 100
@@ -61,7 +62,7 @@ class EventCRUD:
         result = await db.execute(stmt)
         return list(result.scalars().all())
     
-    async def get_unverified_events_count(self, db: AsyncSession) -> int:
+    async def get_unverified_events_count(self, db: AsyncSession) -> int:  # Добавлен self
         """Получить количество непроверенных событий"""
         stmt = select(func.count(Event.id)).where(
             Event.is_verified == False
@@ -71,7 +72,7 @@ class EventCRUD:
         return result.scalar_one()
     
     async def update_event_verification(
-        self, 
+        self,  # Уже есть
         db: AsyncSession, 
         event_id: int, 
         is_verified: bool
@@ -94,7 +95,7 @@ class EventCRUD:
         # Возвращаем обновленный объект
         return await self.get_event(db, event_id)
     
-    async def delete_event(self, db: AsyncSession, event_id: int) -> bool:
+    async def delete_event(self, db: AsyncSession, event_id: int) -> bool:  # Добавлен self
         """Удалить событие"""
         # Проверяем существование события
         existing_event = await self.get_event(db, event_id)
@@ -109,7 +110,7 @@ class EventCRUD:
         return True
     
     # CRUD для оценок
-    async def create_rating(db: AsyncSession, rating: events.RatingCreate) -> Optional[Rating]:
+    async def create_rating(self, db: AsyncSession, rating: events.RatingCreate) -> Optional[Rating]:  # Добавлен self
         # Проверяем, существует ли мероприятие (async)
         stmt = select(Event).filter(Event.id == rating.event_id)
         result = await db.execute(stmt)
@@ -139,10 +140,10 @@ class EventCRUD:
             existing_rating = db_rating  # Для возврата
         
         # Обновляем рейтинг мероприятия
-        await event_crud.update_event_rating(db, rating.event_id)
+        await self.update_event_rating(db, rating.event_id)  # event_crud -> self
         return existing_rating
 
-    async def update_event_rating(db: AsyncSession, event_id: int):
+    async def update_event_rating(self, db: AsyncSession, event_id: int):  # Добавлен self
         """Обновляет рейтинг мероприятия"""
         
         # Вычисляем средний рейтинг (async)
@@ -163,13 +164,13 @@ class EventCRUD:
                 event_obj.rating = 0.0
             await db.commit()
 
-    async def get_ratings_by_event(db: AsyncSession, event_id: int) -> List[Rating]:
+    async def get_ratings_by_event(self, db: AsyncSession, event_id: int) -> List[Rating]:  # Добавлен self
         stmt = select(Rating).filter(Rating.event_id == event_id)
         result = await db.execute(stmt)
         return list(result.scalars().all())
 
     # CRUD для комментариев
-    async def create_comment(db: AsyncSession, comment: events.CommentCreate) -> Optional[Comment]:
+    async def create_comment(self, db: AsyncSession, comment: events.CommentCreate) -> Optional[Comment]:  # Добавлен self
         # Проверяем, существует ли мероприятие
         stmt = select(Event).filter(Event.id == comment.event_id)
         result = await db.execute(stmt)
@@ -183,12 +184,12 @@ class EventCRUD:
         await db.refresh(db_comment)
         return db_comment
 
-    async def get_comments_by_event(db: AsyncSession, event_id: int) -> List[Comment]:
+    async def get_comments_by_event(self, db: AsyncSession, event_id: int) -> List[Comment]:  # Добавлен self
         stmt = select(Comment).filter(Comment.event_id == event_id)
         result = await db.execute(stmt)
         return list(result.scalars().all())
 
-    async def delete_comment(db: AsyncSession, comment_id: int, user_id: int) -> bool:
+    async def delete_comment(self, db: AsyncSession, comment_id: int, user_id: int) -> bool:  # Добавлен self
         stmt = select(Comment).filter(
             and_(Comment.id == comment_id, Comment.user_id == user_id)
         )

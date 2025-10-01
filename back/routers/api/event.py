@@ -6,8 +6,8 @@ from typing import List, Optional
 from datetime import datetime
 import models as models
 from schemas import events as events_schemas
-from routers.crud import event as event_crud
-from database.database import engine, get_db
+from routers.crud.event import event_crud
+from database.database import get_db
 
 event_router = APIRouter()
 

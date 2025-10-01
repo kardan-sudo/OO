@@ -17,7 +17,7 @@ class EventResponse(BaseModel):
     website: str
     phone: str
     description: Optional[str] = None
-    is_verified = bool
+    is_verified: bool = False
     
     class Config:
         from_attributes = True
@@ -70,7 +70,7 @@ class EventListResponse(BaseModel):
     pages: int
 
 class VerificationUpdate(BaseModel):
-    is_verified: bool
+    is_verified: bool = False
 
 # Схемы для оценок
 class RatingBase(BaseModel):
