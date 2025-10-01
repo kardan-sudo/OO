@@ -1,26 +1,22 @@
 from typing import List
 from database.database import get_db
-from routers.crud.quiz import QuizCRUD
 from schemas.quiz import QuestionResponse, QuizCreate, QuizListResponse, QuizResponse, QuizResult, QuizSubmission
+from routers.crud.quiz import quiz_crud
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 quiz_router = APIRouter(prefix="/quizzes", tags=["quizzes"])
 
-# Зависимости
-def get_quiz_crud() -> QuizCRUD:
-    return QuizCRUD()
 
 # Ручки для заполнения данных
 @quiz_router.post("/", response_model=QuizResponse, status_code=status.HTTP_201_CREATED)
 async def create_quiz(
     quiz_data: QuizCreate,
-    db: AsyncSession = Depends(get_db),
-    crud: QuizCRUD = Depends(get_quiz_crud)
+    db: AsyncSession = Depends(get_db)
 ):
     """Создать новую викторину с вопросами и ответами"""
     try:
-        quiz = await crud.create_quiz(db, quiz_data)
+        quiz = await quiz_crud.create_quiz(db, quiz_data)
         # Добавляем количество вопросов для ответа
         quiz_dict = {**quiz.__dict__, "questions_count": len(quiz.questions)}
         return quiz_dict
@@ -37,17 +33,16 @@ async def get_quizzes(
     skip: int = Query(0, ge=0, description="Смещение"),
     limit: int = Query(20, ge=1, le=100, description="Лимит"),
     only_active: bool = Query(True, description="Только активные викторины"),
-    crud: QuizCRUD = Depends(get_quiz_crud)
 ):
     """Получить список всех викторин"""
-    quizzes = await crud.get_quizzes(
+    quizzes = await quiz_crud.get_quizzes(
         db=db,
         skip=skip,
         limit=limit,
         only_active=only_active
     )
     
-    total = await crud.get_quizzes_count(db=db, only_active=only_active)
+    total = await quiz_crud.get_quizzes_count(db=db, only_active=only_active)
     
     # Добавляем количество вопросов для каждой викторины
     quizzes_with_count = []
@@ -67,11 +62,10 @@ async def get_quizzes(
 @quiz_router.get("/{quiz_id}/questions", response_model=List[QuestionResponse])
 async def get_quiz_questions(
     quiz_id: int,
-    db: AsyncSession = Depends(get_db),
-    crud: QuizCRUD = Depends(get_quiz_crud)
+    db: AsyncSession = Depends(get_db)
 ):
     """Получить список вопросов для конкретной викторины"""
-    questions = await crud.get_quiz_questions(db, quiz_id)
+    questions = await quiz_crud.get_quiz_questions(db, quiz_id)
     
     if not questions:
         raise HTTPException(
@@ -86,8 +80,7 @@ async def get_quiz_questions(
 async def submit_quiz(
     quiz_id: int,
     submission: QuizSubmission,
-    db: AsyncSession = Depends(get_db),
-    crud: QuizCRUD = Depends(get_quiz_crud)
+    db: AsyncSession = Depends(get_db)
 ):
     """Отправить ответы на викторину и получить результат"""
     if quiz_id != submission.quiz_id:
@@ -97,7 +90,7 @@ async def submit_quiz(
         )
     
     try:
-        result = await crud.check_quiz_answers(db, quiz_id, submission.answers)
+        result = await quiz_crud.check_quiz_answers(db, quiz_id, submission.answers)
         return QuizResult(**result)
     except ValueError as e:
         raise HTTPException(
