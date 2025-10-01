@@ -3,17 +3,17 @@ from sqlalchemy.ext.asyncio import AsyncSession  # Изменено для async
 from sqlalchemy import select
 from typing import List, Optional
 from datetime import datetime
-import back.models as models
-from back.schemas import events as events_schemas
-from back.routers.crud import event as event_crud
-from back.database.database import engine, get_db
+import models
+from schemas import events as events_schemas
+from routers.crud import event as event_crud
+from database.database import engine, get_db
 
 event_router = APIRouter()  # Определение роутера здесь
 
 # Роуты для мероприятий
 @event_router.post("/events/", response_model=events_schemas.Event, status_code=status.HTTP_201_CREATED)
 async def create_event(event: events_schemas.EventCreate, db: AsyncSession = Depends(get_db)):  # Добавлено async, изменён тип db
-    return await event_crud.create_event(db=db, event=event)  # Добавлено await
+    return await event_crud.create_event(db=db, event_obj=event)  # Добавлено await
 
 @event_router.get("/events/", response_model=List[events_schemas.Event])
 async def read_events(  # Добавлено async

@@ -7,6 +7,8 @@ from alembic import context
 from database.database import engine, Base
 from models.user import User
 from models.events import Event, Rating, Comment
+from models.broadcast import MemorialDate
+from models.picturesque import ScenicSpot
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

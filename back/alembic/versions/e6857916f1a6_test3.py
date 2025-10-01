@@ -1,8 +1,8 @@
-"""Add User events
+"""test3
 
-Revision ID: 04070060fe7b
-Revises: 07abba06c756
-Create Date: 2025-09-29 00:11:09.789909
+Revision ID: e6857916f1a6
+Revises: 
+Create Date: 2025-10-01 15:30:27.678213
 
 """
 from typing import Sequence, Union
@@ -12,8 +12,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '04070060fe7b'
-down_revision: Union[str, Sequence[str], None] = '07abba06c756'
+revision: str = 'e6857916f1a6'
+down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
@@ -33,11 +33,27 @@ def upgrade() -> None:
     sa.Column('rating', sa.Float(), nullable=True),
     sa.Column('organizer', sa.String(length=150), nullable=False),
     sa.Column('description', sa.Text(), nullable=True),
+    sa.Column('website', sa.String(length=200), nullable=True),
+    sa.Column('phone', sa.String(length=20), nullable=True),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_events_event_type'), 'events', ['event_type'], unique=False)
     op.create_index(op.f('ix_events_id'), 'events', ['id'], unique=False)
     op.create_index(op.f('ix_events_title'), 'events', ['title'], unique=False)
+    op.create_table('users',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('full_name', sa.String(), nullable=False),
+    sa.Column('date_of_birth', sa.Date(), nullable=False),
+    sa.Column('username', sa.String(), nullable=False),
+    sa.Column('password', sa.String(), nullable=False),
+    sa.Column('is_organizer', sa.Boolean(), nullable=True),
+    sa.Column('is_representative', sa.Boolean(), nullable=True),
+    sa.Column('created_at', sa.Date(), nullable=True),
+    sa.Column('updated_at', sa.Date(), nullable=True),
+    sa.PrimaryKeyConstraint('id')
+    )
+    op.create_index(op.f('ix_users_id'), 'users', ['id'], unique=False)
+    op.create_index(op.f('ix_users_username'), 'users', ['username'], unique=True)
     op.create_table('comments',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('event_id', sa.Integer(), nullable=False),
@@ -67,6 +83,9 @@ def downgrade() -> None:
     op.drop_table('ratings')
     op.drop_index(op.f('ix_comments_id'), table_name='comments')
     op.drop_table('comments')
+    op.drop_index(op.f('ix_users_username'), table_name='users')
+    op.drop_index(op.f('ix_users_id'), table_name='users')
+    op.drop_table('users')
     op.drop_index(op.f('ix_events_title'), table_name='events')
     op.drop_index(op.f('ix_events_id'), table_name='events')
     op.drop_index(op.f('ix_events_event_type'), table_name='events')

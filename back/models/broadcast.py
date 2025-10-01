@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, Date, Boolean, Text
 from sqlalchemy.ext.declarative import declarative_base
-from database import Base
+from database.database import Base
 
 class MemorialDate(Base):
     __tablename__ = "memorial_dates"

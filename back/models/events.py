@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, String, Float, DateTime, Text, ForeignKey, event
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-from back.database.database import Base
+from database.database import Base
 
 class Event(Base):
     __tablename__ = "events"
@@ -9,8 +9,8 @@ class Event(Base):
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String(200), nullable=False, index=True)
     event_type = Column(String(50), nullable=False, index=True)
-    start_date = Column(DateTime, nullable=False)
-    end_date = Column(DateTime, nullable=False)
+    start_date = Column(DateTime(timezone=True))
+    end_date = Column(DateTime(timezone=True))
     address = Column(String(300), nullable=False)
     x_coordinate = Column(Float, nullable=False)
     y_coordinate = Column(Float, nullable=False)

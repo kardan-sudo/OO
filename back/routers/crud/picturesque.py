@@ -1,7 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, update
 from typing import List, Optional
-from back.models.picturesque import ScenicSpot
+from models.picturesque import ScenicSpot
 
 class ScenicSpotCRUD:
     async def get_scenic_spot(self, db: AsyncSession, spot_id: int) -> Optional[ScenicSpot]:

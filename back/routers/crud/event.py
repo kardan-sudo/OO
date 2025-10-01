@@ -1,8 +1,8 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_, or_, func, update
 from sqlalchemy.orm import selectinload  # Если нужны eager loads, опционально
-from back.models import events as event
-from back.schemas import events
+from models import events as event
+from schemas import events
 from typing import List, Optional
 
 # CRUD для мероприятий
