@@ -1,8 +1,8 @@
-"""walking_route
+"""comint_in_obshaga
 
-Revision ID: 38cf92c3837a
-Revises: fb9a8523bf55
-Create Date: 2025-10-01 18:19:06.100905
+Revision ID: 58d3d080cab8
+Revises: 
+Create Date: 2025-10-01 23:16:17.896902
 
 """
 from typing import Sequence, Union
@@ -12,8 +12,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '38cf92c3837a'
-down_revision: Union[str, Sequence[str], None] = 'fb9a8523bf55'
+revision: str = '58d3d080cab8'
+down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
