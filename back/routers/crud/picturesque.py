@@ -1,5 +1,5 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, update
+from sqlalchemy import select, func, update, delete
 from typing import List, Optional
 from models.picturesque import ScenicSpot
 
@@ -75,6 +75,50 @@ class ScenicSpotCRUD:
         
         # Возвращаем обновленный объект
         return await self.get_scenic_spot(db, spot_id)
+    
+    async def get_unverified_scenic_spots(
+        self, 
+        db: AsyncSession, 
+    ) -> List[ScenicSpot]:
+        """Получить список непроверенных мест"""
+        query = select(ScenicSpot).where(
+            ScenicSpot.is_active == True,
+            ScenicSpot.is_verified == False  # Только непроверенные
+        )
+            
+        query = query.order_by(ScenicSpot.id.desc())
+        
+        result = await db.execute(query)
+        return result.scalars().all()
+    
+    async def get_unverified_scenic_spots_count(
+        self,
+        db: AsyncSession,
+    ) -> int:
+        """Получить количество непроверенных мест"""
+        query = select(func.count(ScenicSpot.id)).where(
+            ScenicSpot.is_active == True,
+            ScenicSpot.is_verified == False  # Только непроверенные
+        )
+            
+        result = await db.execute(query)
+        return result.scalar_one()
 
+    async def delete_scenic_spot(self, db: AsyncSession, spot_id: int) -> bool:
+        """
+        Удалить живописное место по ID
+        Возвращает True если удалено, False если не найдено
+        """
+        # Сначала проверяем существование места
+        spot = await self.get_scenic_spot(db, spot_id)
+        if not spot:
+            return False
+        
+        # Выполняем удаление
+        stmt = delete(ScenicSpot).where(ScenicSpot.id == spot_id)
+        await db.execute(stmt)
+        await db.commit()
+        
+        return True
 
 scenic_spot_crud = ScenicSpotCRUD()

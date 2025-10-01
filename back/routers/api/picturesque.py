@@ -1,10 +1,11 @@
+from requests import Response
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from typing import Optional
 
 from database.database import get_db
-from models.picturesque import ScenicSpot, SpotType
+from models.picturesque import ScenicSpot
 from schemas.picturesque import (
     ScenicSpotCreate, 
     ScenicSpotResponse, 
@@ -73,6 +74,17 @@ async def create_scenic_spot(
     db_spot = await scenic_spot_crud.create_scenic_spot(db, spot.dict())
     return db_spot
 
+@picturesque_router.get("/unverified", response_model=ScenicSpotList)
+async def read_unverified_scenic_spots(db: AsyncSession = Depends(get_db)):
+    """
+    Получить список непроверенных живописных мест с пагинацией и фильтрацией
+    """
+    spots = await scenic_spot_crud.get_unverified_scenic_spots(db=db)
+    
+    total = await scenic_spot_crud.get_unverified_scenic_spots_count(db=db)
+    
+    return ScenicSpotList(items=spots, total=total)
+
 @picturesque_router.patch("/{spot_id}/verify", response_model=ScenicSpotResponse)
 async def verify_scenic_spot(
     spot_id: int,
@@ -100,5 +112,19 @@ async def verify_scenic_spot(
     
     return updated_spot
 
-
-#нужна ручка только для неподтвержденных!!!
+@picturesque_router.delete("/{spot_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_scenic_spot(
+    spot_id: int,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Удалить живописное место по ID
+    """
+    success = await scenic_spot_crud.delete_scenic_spot(db, spot_id)
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Scenic spot not found"
+        )
+    
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

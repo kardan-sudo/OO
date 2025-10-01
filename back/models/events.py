@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, DateTime, Text, ForeignKey, event
+from sqlalchemy import Column, Integer, String, Float, DateTime, Text, ForeignKey, Boolean
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from database.database import Base
@@ -19,6 +19,7 @@ class Event(Base):
     description = Column(Text)
     website = Column(String(200))
     phone = Column(String(20))
+    is_verified = Column(Boolean, default=False) 
     
     ratings = relationship("Rating", back_populates="event", cascade="all, delete")
     comments = relationship("Comment", back_populates="event", cascade="all, delete")
