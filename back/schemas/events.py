@@ -17,6 +17,7 @@ class EventResponse(BaseModel):
     website: str
     phone: str
     description: Optional[str] = None
+    is_verifed = bool
     
     class Config:
         from_attributes = True
@@ -60,6 +61,16 @@ class Event(EventBase):
     
     class Config:
         orm_mode = True
+
+class EventListResponse(BaseModel):
+    items: List[EventResponse]
+    total: int
+    page: int
+    size: int
+    pages: int
+
+class VerificationUpdate(BaseModel):
+    is_verified: bool
 
 # Схемы для оценок
 class RatingBase(BaseModel):
