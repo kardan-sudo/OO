@@ -19,6 +19,7 @@ class Question(Base):
     id = Column(Integer, primary_key=True, index=True)
     quiz_id = Column(Integer, ForeignKey("quizzes.id", ondelete="CASCADE"), nullable=False)
     question_text = Column(Text, nullable=False)
+    order_index = Column(Integer, default=0)  # Порядок вопросов
     
     # Связи
     quiz = relationship("Quiz", back_populates="questions")
@@ -31,6 +32,7 @@ class Answer(Base):
     question_id = Column(Integer, ForeignKey("questions.id", ondelete="CASCADE"), nullable=False)
     answer_text = Column(Text, nullable=False)
     is_correct = Column(Boolean, default=False)
+    order_index = Column(Integer, default=0)  # Порядок ответов
     
     # Связи
     question = relationship("Question", back_populates="answers")
