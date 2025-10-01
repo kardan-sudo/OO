@@ -9,7 +9,7 @@ from schemas import events as events_schemas
 from routers.crud import event as event_crud
 from database.database import engine, get_db
 
-event_router = APIRouter()
+event_router = APIRouter(prefix="/events", tags=["events"])
 
 # Роуты для мероприятий
 @event_router.post("/events/", response_model=events_schemas.Event, status_code=status.HTTP_201_CREATED)
