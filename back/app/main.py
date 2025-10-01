@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from routers.api.event import event_router
 from routers.api.picturesque import picturesque_router
+from routers.api.trip import walking_route_router
 from utils.sender import email_sender
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
