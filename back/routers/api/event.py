@@ -1,3 +1,4 @@
+from requests import Response
 from fastapi import Depends, HTTPException, status, Query, APIRouter
 from sqlalchemy.ext.asyncio import AsyncSession  # Изменено для async
 from sqlalchemy import select
@@ -5,10 +6,10 @@ from typing import List, Optional
 from datetime import datetime
 import back.models as models
 from back.schemas import events as events_schemas
-from back.routers.crud import event as event_crud
-from back.database.database import engine, get_db
+from back.database.database import get_db
+from routers.crud.event import event_crud
 
-event_router = APIRouter()  # Определение роутера здесь
+event_router = APIRouter()
 
 # Роуты для мероприятий
 @event_router.post("/events/", response_model=events_schemas.Event, status_code=status.HTTP_201_CREATED)
@@ -66,6 +67,74 @@ async def get_current_events(
     events = result.scalars().all()
     
     return events
+
+@event_router.get("/unverified", response_model=events_schemas.EventListResponse)
+async def get_unverified_events(
+    db: AsyncSession = Depends(get_db),
+    skip: Optional[int] = Query(0, ge=0, description="Смещение"),
+    limit: Optional[int] = Query(20, ge=1, le=100, description="Лимит")
+):
+    """
+    Получить список непроверенных событий для модерации
+    """
+    events = await event_crud.get_unverified_events(
+        db=db,
+        skip=skip,
+        limit=limit
+    )
+    
+    total = await event_crud.get_unverified_events_count(db=db)
+    
+    return events_schemas.EventListResponse(
+        items=events,
+        total=total,
+        page=skip // limit + 1,
+        size=limit,
+        pages=(total + limit - 1) // limit
+    )
+
+# Обновить статус проверки события
+@event_router.put("/{event_id}/verification", response_model=events_schemas.EventResponse)
+async def update_event_verification(
+    event_id: int,
+    verification_data: events_schemas.VerificationUpdate,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Обновить статус проверки события (модерация)
+    """
+    updated_event = await event_crud.update_event_verification(
+        db=db,
+        event_id=event_id,
+        is_verified=verification_data.is_verified
+    )
+    
+    if not updated_event:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Event not found"
+        )
+    
+    return updated_event
+
+# Удалить событие
+@event_router.delete("/{event_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_event(
+    event_id: int,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Удалить событие
+    """
+    success = await event_crud.delete_event(db=db, event_id=event_id)
+    
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Event not found"
+        )
+    
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 # Роуты для оценок
 @event_router.post("/ratings/", response_model=events_schemas.Rating, status_code=status.HTTP_201_CREATED)
