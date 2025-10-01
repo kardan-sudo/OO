@@ -4,9 +4,10 @@ from sqlalchemy.ext.asyncio import AsyncSession  # Изменено для async
 from sqlalchemy import select
 from typing import List, Optional
 from datetime import datetime
-import models as models
+from models.events import Event
 from schemas import events as events_schemas
 from routers.crud.event import event_crud
+from fastapi import Response, status
 from database.database import get_db
 
 event_router = APIRouter(prefix="/events", tags=["events"])
@@ -37,12 +38,7 @@ async def read_events(  # Добавлено async
     events = await event_crud.get_events(db, skip=skip, limit=limit, filters=filters)  # Добавлено await
     return events
 
-@event_router.get("/{event_id}", response_model=events_schemas.EventDetail)
-async def read_event(event_id: int, db: AsyncSession = Depends(get_db)):  # Добавлено async, изменён тип db
-    db_event = await event_crud.get_event(db, event_id=event_id)  # Добавлено await
-    if db_event is None:
-        raise HTTPException(status_code=404, detail="Event not found")
-    return db_event
+
 
 @event_router.get("/top_current", response_model=List[events_schemas.EventResponse])
 async def get_current_events(
@@ -57,11 +53,11 @@ async def get_current_events(
     current_time = datetime.now()
     
     # Строим базовый запрос
-    query = select(models.Event).where(
-        models.Event.start_date <= current_time,
-        models.Event.end_date >= current_time
+    query = select(Event).where(
+        Event.start_date <= current_time,
+        Event.end_date >= current_time
     )
-    query = query.order_by(models.Event.rating.desc()).offset(skip).limit(limit)
+    query = query.order_by(Event.rating.desc()).offset(skip).limit(limit)
     
     result = await db.execute(query)
     events = result.scalars().all()
@@ -167,3 +163,10 @@ async def delete_comment(  # Добавлено async
     if not success:
         raise HTTPException(status_code=404, detail="Comment not found or you don't have permission to delete it")
     return {"message": "Comment deleted successfully"}
+
+@event_router.get("/{event_id}", response_model=events_schemas.EventDetail)
+async def read_event(event_id: int, db: AsyncSession = Depends(get_db)):  # Добавлено async, изменён тип db
+    db_event = await event_crud.get_event(db, event_id=event_id)  # Добавлено await
+    if db_event is None:
+        raise HTTPException(status_code=404, detail="Event not found")
+    return db_event

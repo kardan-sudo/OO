@@ -3,6 +3,7 @@ from sqlalchemy import select, and_, or_, func, update, delete
 from models.events import Event, Rating, Comment
 from schemas import events
 from typing import List, Optional
+from sqlalchemy.orm import selectinload  # импорт в начале файла
 
 # CRUD для мероприятий
 
@@ -43,10 +44,19 @@ class EventCRUD:
         result = await db.execute(stmt)
         return list(result.scalars().all())  # Возвращаем список объектов
 
-    async def get_event(self, db: AsyncSession, event_id: int) -> Optional[Event]:  # Добавлен self
-        stmt = select(Event).filter(Event.id == event_id)
+
+
+    async def get_event(self, db: AsyncSession, event_id: int) -> Optional[Event]:
+        stmt = (
+            select(Event)
+            .options(
+                selectinload(Event.ratings),
+                selectinload(Event.comments)
+            )
+            .filter(Event.id == event_id)
+        )
         result = await db.execute(stmt)
-        return result.scalar_one_or_none()  # Или .first() если используете scalars()
+        return result.scalar_one_or_none()
     
     async def get_unverified_events(
         self,  # Уже есть
