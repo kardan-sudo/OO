@@ -5,7 +5,7 @@ from sqlalchemy import select
 from typing import Optional
 
 from database.database import get_db
-from models.picturesque import ScenicSpot, SpotType
+from models.picturesque import ScenicSpot
 from schemas.picturesque import (
     ScenicSpotCreate, 
     ScenicSpotResponse, 

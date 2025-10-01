@@ -5,10 +5,10 @@ from typing import List, Optional
 from datetime import datetime
 import back.models as models
 from back.schemas import events as events_schemas
-from back.routers.crud import event as event_crud
-from back.database.database import engine, get_db
+from back.database.database import get_db
+from routers.crud.event import event_crud
 
-event_router = APIRouter()  # Определение роутера здесь
+event_router = APIRouter()
 
 # Роуты для мероприятий
 @event_router.post("/events/", response_model=events_schemas.Event, status_code=status.HTTP_201_CREATED)
