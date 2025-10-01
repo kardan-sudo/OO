@@ -17,7 +17,7 @@ class EventResponse(BaseModel):
     website: str
     phone: str
     description: Optional[str] = None
-    is_verifed = bool
+    is_verified = bool
     
     class Config:
         from_attributes = True
