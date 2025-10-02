@@ -41,9 +41,9 @@ class User(Base):
 
 # Исправленное определение enum
 class RequestStatus(PyEnum):
-    PENDING = "pending"
-    APPROVED = "approved"
-    REJECTED = "rejected"
+    PENDING = "PENDING"
+    APPROVED = "APPROVED"
+    REJECTED = "REJECTED"
 
 class RepresentationRequest(Base):
     __tablename__ = "representation_requests"

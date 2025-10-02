@@ -28,7 +28,7 @@ async def create_walking_route(
         )
 
 # Получить список маршрутов с фильтрацией
-@walking_route_router.get("/", response_model=WalkingRouteListResponse)
+@walking_route_router.get("", response_model=WalkingRouteListResponse)
 async def get_walking_routes(
     db: AsyncSession = Depends(get_db),
     min_distance: Optional[float] = Query(None, ge=0, description="Минимальная протяженность (км)"),

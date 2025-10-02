@@ -43,7 +43,7 @@ async def get_user_by_id(user: UserID, db: AsyncSession = Depends(get_db)):
     else:
         raise HTTPException(status_code=400, detail="User not found")
     
-@user_router.post("/", response_model=RepresentationRequestResponse, status_code=status.HTTP_201_CREATED)
+@user_router.post("/requests", response_model=RepresentationRequestResponse, status_code=status.HTTP_201_CREATED)
 async def create_representation_request(
     request: RepresentationRequestCreate,
     db: AsyncSession = Depends(get_db)
@@ -58,14 +58,11 @@ async def create_representation_request(
             detail=str(e)
         )
 
-@user_router.get("/pending", response_model=RepresentationRequestList)
-async def get_pending_requests(
-    skip: int = Query(0, ge=0),
-    limit: int = Query(20, ge=1, le=100),
-    db: AsyncSession = Depends(get_db)
+@user_router.get("/requests/pending", response_model=RepresentationRequestList)
+async def get_pending_requests(db: AsyncSession = Depends(get_db)
 ):
     """Получить список всех неподтвержденных заявок"""
-    requests = await representation_request_crud.get_pending_requests(db, skip, limit)
+    requests = await representation_request_crud.get_pending_requests(db)
     
     # Преобразуем в response с информацией о пользователе
     requests_with_user = []
@@ -78,13 +75,10 @@ async def get_pending_requests(
     
     return RepresentationRequestList(
         items=requests_with_user,
-        total=total,
-        page=skip // limit + 1,
-        size=limit,
-        pages=(total + limit - 1) // limit
+        total=total
     )
 
-@user_router.patch("/{request_id}", response_model=RepresentationRequestResponse)
+@user_router.patch("/requests/{request_id}", response_model=RepresentationRequestResponse)
 async def update_request_status(
     request_id: int,
     update_data: RepresentationRequestUpdate,

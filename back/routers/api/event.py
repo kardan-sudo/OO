@@ -58,7 +58,7 @@ async def create_event(
     
     return db_event
 
-@event_router.get("/", response_model=events_schemas.EventListResponse)
+@event_router.get("", response_model=events_schemas.EventListResponse)
 async def read_events(
     event_type: Optional[str] = Query(None, description="Тип мероприятия"),
     start_date_from: Optional[datetime] = Query(None, description="Начало периода"),

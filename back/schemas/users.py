@@ -42,9 +42,9 @@ class UserID(BaseModel):
     id: int
     
 class RequestStatus(str, Enum):
-    PENDING = "pending"
-    APPROVED = "approved"
-    REJECTED = "rejected"
+    PENDING = "PENDING"
+    APPROVED = "APPROVED"
+    REJECTED = "REJECTED"
 
 class RepresentationRequestBase(BaseModel):
     position: str
@@ -65,7 +65,7 @@ class RepresentationRequestResponse(RepresentationRequestBase):
         from_attributes = True
 
 class RepresentationRequestWithUserResponse(RepresentationRequestResponse):
-    user_full_name: str
+    user_full_name: Optional[str] = None
     user_email: Optional[str] = None  # Если есть email в модели User
 
 class RepresentationRequestList(BaseModel):

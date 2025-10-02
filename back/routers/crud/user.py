@@ -5,6 +5,7 @@ from models.user import RepresentationRequest, User
 from schemas.users import RepresentationRequestCreate, RequestStatus, UserCreate, UserUpdate, UserLogin
 from typing import List, Optional
 from datetime import date, timedelta
+from sqlalchemy.orm import selectinload  # Добавлен импорт для eager loading
 
 class UserCRUD:
     async def create_user(self, db: AsyncSession, user: UserCreate) -> Optional[User]:
@@ -88,17 +89,13 @@ class RepresentationRequestCRUD:
     
     async def get_pending_requests(
         self, 
-        db: AsyncSession, 
-        skip: int = 0, 
-        limit: int = 100
+        db: AsyncSession
     ) -> List[RepresentationRequest]:
         stmt = (
             select(RepresentationRequest)
             .join(User)
+            .options(selectinload(RepresentationRequest.user))  # Добавлен eager load для user
             .where(RepresentationRequest.status == RequestStatus.PENDING)
-            .order_by(RepresentationRequest.created_at.desc())
-            .offset(skip)
-            .limit(limit)
         )
         result = await db.execute(stmt)
         return list(result.scalars().all())
@@ -118,6 +115,7 @@ class RepresentationRequestCRUD:
         stmt = (
             select(RepresentationRequest)
             .join(User)
+            .options(selectinload(RepresentationRequest.user))  # Добавлен eager load для user
             .where(RepresentationRequest.id == request_id)
         )
         result = await db.execute(stmt)

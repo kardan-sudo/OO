@@ -13,3 +13,4 @@ class WalkingRoute(Base):
     points_of_interest_count = Column(Integer, nullable=False, default=0)  # Количество интересных мест
     difficulty = Column(String(50), default="medium")  # easy, medium, hard
     location = Column(String(200))  # Общая локация/район
+    url = Column(Text)
