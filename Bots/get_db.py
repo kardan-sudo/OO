@@ -73,3 +73,10 @@ def get_routes(time,difficulty_filter):
                 cursor.execute(query, (difficulty_filter,time,))
                 return cursor.fetchall()
 
+def get_scenic_spots():
+    """Получает список живописных мест из БД"""
+    with psycopg2.connect(**conn_params) as connection:
+        with connection.cursor(cursor_factory=RealDictCursor) as cursor:
+            cursor.execute("""
+                SELECT * FROM scenic_spots ORDER BY title""")
+            return cursor.fetchall()

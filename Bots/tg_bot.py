@@ -132,17 +132,33 @@ def get_text_messages(message):
         two_hour = types.KeyboardButton("Легкий")
         three_hour = types.KeyboardButton("Средний")
         greate_three = types.KeyboardButton("Тяжелый")
-        allin = types.KeyboardButton('Неважно')
+        allin = types.KeyboardButton('Любой')
         menu = types.KeyboardButton("Главное меню")
         markup.add(two_hour,three_hour, greate_three, allin, menu)
         safe_send_message(message.from_user.id, 'Выберите сложность маршрута', reply_markup=markup)
 
-    elif message.text in ["Легкий", "Средний", "Тяжелый", 'Неважно']:
+    elif message.text == 'Живописные места':
+        # Получаем данные о живописных местах
+        scenic_spots = get_scenic_spots()
+        
+        user_id = message.from_user.id
+        user_states[user_id] = {
+            'scenic_spots': scenic_spots,
+            'current_index': 0,
+            'message_id': None,
+            'has_photo': False,
+            'content_type': 'scenic_spot'  # Новый тип контента
+        }
+        
+        # Показываем первое живописное место
+        show_event_and_route(user_id, scenic_spots, 'scenic_spot', first_time=True)
+
+    elif message.text in ["Легкий", "Средний", "Тяжелый", 'Любой']:
         difficulty_dict = {
             "Легкий": "easy",
             "Средний": "medium", 
             "Тяжелый": "hard",
-            "Неважно": "NULL"
+            "Любой": "NULL"
         }
         
         user_id = message.from_user.id
@@ -271,13 +287,16 @@ def get_route_image_path(route_id):
 
 
 def send_item_message(user_id, caption, markup, data, item_type, first_time, state):
-    """Отправляет сообщение с предметом (мероприятие/маршрут)"""
-    # Получаем путь к изображению
+    """Отправляет сообщение с предметом (мероприятие/маршрут/живописное место)"""
+    # Получаем путь к изображению в зависимости от типа
     if item_type == 'event':
         data_image = get_event_image_path(data['id'])
-    else:  # route
-        data_image = get_route_image_path(data['id'])  # Нужно создать эту функцию
+    elif item_type == 'route':
+        data_image = get_route_image_path(data['id'])
+    else:  # scenic_spot
+        data_image = get_scenic_spot_image_path(data['id'])
     
+    # Остальной код остается таким же...
     # Для первого показа
     if first_time:
         if data_image and data_image.exists():
@@ -324,15 +343,39 @@ def send_item_message(user_id, caption, markup, data, item_type, first_time, sta
                 state['has_photo'] = False
 
 
+def format_scenic_spot_message(data):
+    """Форматирует сообщение для живописного места"""
+    
+    return f'''
+*{data['title']}*
+
+{data['description']}
+Время работы: {data['opening_hours']}
+
+Стоимость: {data['entrance_fee']}
+
+
+📍 Местоположение: {data['address']}
+
+'''
+
+
+def get_scenic_spot_image_path(spot_id):
+    """Получает путь к изображению живописного места"""
+    jpg_path = Path(f'/home/radmir/OO/back/static/scenic/{spot_id}.jpg')
+    if jpg_path.exists():
+        return jpg_path
+    
+    jpeg_path = Path(f'/home/radmir/OO/back/static/scenic/{spot_id}.jpeg')
+    if jpeg_path.exists():
+        return jpeg_path
+    
+    return None
+
+
 def show_event_and_route(user_id, items, item_type='event', first_time=False):
     """
-    Универсальная функция для отображения мероприятий и маршрутов
-    
-    Args:
-        user_id: ID пользователя
-        items: список мероприятий/маршрутов
-        item_type: 'event' или 'route'
-        first_time: первый ли показ
+    Универсальная функция для отображения мероприятий, маршрутов и живописных мест
     """
     if user_id not in user_states:
         return
@@ -371,12 +414,13 @@ def show_event_and_route(user_id, items, item_type='event', first_time=False):
     # Формируем сообщение в зависимости от типа
     if item_type == 'event':
         caption = format_event_message(data)
-    else:  # route
+    elif item_type == 'route':
         caption = format_route_message(data)
+    else:  # scenic_spot
+        caption = format_scenic_spot_message(data)
     
     # Отправка сообщения
     send_item_message(user_id, caption, markup, data, item_type, first_time, state)
-
 
 @bot.callback_query_handler(func=lambda call: True)
 def handle_callback(call):
@@ -396,6 +440,9 @@ def handle_callback(call):
     elif 'routes' in state:
         items = state['routes']
         content_type = 'route'
+    elif 'scenic_spots' in state:
+        items = state['scenic_spots']
+        content_type = 'scenic_spot'
     else:
         bot.answer_callback_query(call.id, "Данные не найдены")
         return
