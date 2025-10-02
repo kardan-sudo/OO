@@ -17,6 +17,13 @@ class EventResponse(BaseModel):
     phone: str
     description: Optional[str] = None
     is_verified: bool = False
+    photo_url: str = None  # Добавлено поле photo_url
+
+    @validator('photo_url', pre=True, always=True)
+    def compute_photo_url(cls, v, values):
+        if 'id' in values:
+            return f"http://10.11.121.199:8000/static/events/{values['id']}.jpeg"
+        return None
     
     class Config:
         from_attributes = True
