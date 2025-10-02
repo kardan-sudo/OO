@@ -3,7 +3,6 @@ from app.file_service import file_service
 from fastapi import Depends, HTTPException, status, Query, APIRouter, UploadFile, File, Response, Form
 from sqlalchemy.ext.asyncio import AsyncSession  # Изменено для async
 from sqlalchemy import select
-from fastapi.responses import FileResponse
 from typing import List, Optional
 from datetime import datetime
 from models.events import Event
@@ -131,64 +130,6 @@ async def read_event(event_id: int, db: AsyncSession = Depends(get_db)):
     if db_event is None:
         raise HTTPException(status_code=404, detail="Event not found")
     return db_event
-
-
-@event_router.post("/{event_id}/photo")
-async def upload_event_photo(
-    event_id: int,
-    photo: UploadFile = File(...),
-    db: AsyncSession = Depends(get_db)
-):
-    """Загрузить фото для мероприятия"""
-    # Проверяем существование мероприятия
-    existing_event = await event_crud.get_event(db, event_id)
-    if not existing_event:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Event not found"
-        )
-    
-    # Сохраняем фото
-    success = await file_service.save_event_photo(event_id, photo)
-    if not success:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to save photo"
-        )
-    
-    # Обновляем статус наличия фото
-    await event_crud.update_event_has_photo(db, event_id, True)
-    
-    return {"message": "Photo uploaded successfully"}
-
-@event_router.delete("/{event_id}/photo")
-async def delete_event_photo(
-    event_id: int,
-    db: AsyncSession = Depends(get_db)
-):
-    """Удалить фото мероприятия"""
-    # Проверяем существование мероприятия
-    existing_event = await event_crud.get_event(db, event_id)
-    if not existing_event:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Event not found"
-        )
-    
-    # Удаляем фото
-    success = file_service.delete_event_photo(event_id)
-    if not success:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to delete photo"
-        )
-    
-    # Обновляем статус наличия фото
-    await event_crud.update_event_has_photo(db, event_id, False)
-    
-    return {"message": "Photo deleted successfully"}
-
-
 
 # Обновить статус проверки события
 @event_router.put("/{event_id}/verification", response_model=events_schemas.EventResponse)
