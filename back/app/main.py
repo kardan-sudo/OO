@@ -21,6 +21,8 @@ events_photos_dir = Path('/home/flymalysh/Рабочий стол/sbp/OO/back/st
 app.mount("/static/events", StaticFiles(directory=events_photos_dir), name="events_photos")
 routers_photos_dir = Path('/home/flymalysh/Рабочий стол/sbp/OO/back/static/routes/')
 app.mount("/static/routes", StaticFiles(directory=routers_photos_dir), name="routes_photos")
+scenic_photos_dir = Path('/home/flymalysh/Рабочий стол/sbp/OO/back/static/scenic/')
+app.mount("/static/scenic", StaticFiles(directory=scenic_photos_dir), name="scenic_photos")
 
 app.include_router(event_router)
 app.include_router(picturesque_router)
