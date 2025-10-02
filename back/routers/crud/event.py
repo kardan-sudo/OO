@@ -8,12 +8,22 @@ from sqlalchemy.orm import selectinload  # импорт в начале файл
 # CRUD для мероприятий
 
 class EventCRUD:
-    async def create_event(self, db: AsyncSession, event_obj: events.EventCreate) -> Event:  # Добавлен self
+    async def create_event(self, db: AsyncSession, event_obj: events.EventCreate) -> Event:
         db_event = Event(**event_obj.dict())
         db.add(db_event)
         await db.commit()
         await db.refresh(db_event)
         return db_event
+    
+    async def update_event_has_photo(self, db: AsyncSession, event_id: int, has_photo: bool) -> None:
+        """Обновляет статус наличия фото у мероприятия"""
+        stmt = (
+            update(Event)
+            .where(Event.id == event_id)
+            .values(has_photo=has_photo)
+        )
+        await db.execute(stmt)
+        await db.commit()
 
     async def get_events(
         self,  # Добавлен self
