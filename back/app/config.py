@@ -5,10 +5,10 @@ class Settings(BaseSettings):
     database_url: str = "postgresql://user:password@localhost:5432/sbp"  # Значение по умолчанию
 
     # Настройки SMTP (для email_sender)
-    SMTP_SERVER: str = "smtp.example.com"
+    SMTP_SERVER: str = "smtp.gmail.com"
     SMTP_PORT: int = 587
-    SMTP_USERNAME: str = "your_username"
-    SMTP_PASSWORD: str = "your_password"
+    SMTP_USERNAME: str = "mannanovr70@gmail.com"
+    SMTP_PASSWORD: str = "oafd mldn jpqj lgxk"
     FROM_EMAIL: str = "noreply@example.com"
 
     class Config:
