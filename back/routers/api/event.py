@@ -1,7 +1,9 @@
 from requests import Response
-from fastapi import Depends, HTTPException, status, Query, APIRouter
+from back.app import file_service
+from fastapi import Depends, HTTPException, status, Query, APIRouter, UploadFile, File, Response
 from sqlalchemy.ext.asyncio import AsyncSession  # Изменено для async
 from sqlalchemy import select
+from fastapi.responses import FileResponse
 from typing import List, Optional
 from datetime import datetime
 from models.events import Event
@@ -13,12 +15,28 @@ from database.database import get_db
 event_router = APIRouter(prefix="/events", tags=["events"])
 
 # Роуты для мероприятий
-@event_router.post("/", response_model=events_schemas.Event, status_code=status.HTTP_201_CREATED)
-async def create_event(event: events_schemas.EventCreate, db: AsyncSession = Depends(get_db)):  # Добавлено async, изменён тип db
-    return await event_crud.create_event(db=db, event_obj=event)  # Добавлено await
+@event_router.post("/", response_model=events_schemas.EventResponse, status_code=status.HTTP_201_CREATED)
+async def create_event(
+    event: events_schemas.EventCreate, 
+    photo: Optional[UploadFile] = File(None),
+    db: AsyncSession = Depends(get_db)
+):
+    """Создать мероприятие с возможностью загрузки фото"""
+    # Создаем мероприятие
+    db_event = await event_crud.create_event(db=db, event_obj=event)
+    
+    # Если есть фото - сохраняем его
+    if photo:
+        success = await file_service.save_event_photo(db_event.id, photo)
+        if success:
+            await event_crud.update_event_has_photo(db, db_event.id, True)
+            # Обновляем объект чтобы вернуть актуальные данные
+            await db.refresh(db_event)
+    
+    return db_event
 
-@event_router.get("/", response_model=List[events_schemas.Event])
-async def read_events(  # Добавлено async
+@event_router.get("/", response_model=events_schemas.EventListResponse)
+async def read_events(
     skip: int = 0,
     limit: int = 100,
     event_type: Optional[str] = Query(None, description="Тип мероприятия"),
@@ -26,7 +44,7 @@ async def read_events(  # Добавлено async
     start_date_to: Optional[datetime] = Query(None, description="Конец периода"),
     min_rating: Optional[float] = Query(None, ge=0, le=5, description="Минимальный рейтинг"),
     organizer: Optional[str] = Query(None, description="Организатор"),
-    db: AsyncSession = Depends(get_db)  # Изменён тип db
+    db: AsyncSession = Depends(get_db)
 ):
     filters = events_schemas.EventFilter(
         event_type=event_type,
@@ -35,8 +53,107 @@ async def read_events(  # Добавлено async
         min_rating=min_rating,
         organizer=organizer
     )
-    events = await event_crud.get_events(db, skip=skip, limit=limit, filters=filters)  # Добавлено await
-    return events
+    events = await event_crud.get_events(db, skip=skip, limit=limit, filters=filters)
+    
+    # Добавляем photo_url к каждому событию
+    for event in events:
+        if event.has_photo:
+            event.photo_url = f"/events/{event.id}/photo"
+    
+    total = await event_crud.get_events_count(db, filters=filters)
+    
+    return events_schemas.EventListResponse(
+        items=events,
+        total=total,
+        page=skip // limit + 1,
+        size=limit,
+        pages=(total + limit - 1) // limit
+    )
+
+@event_router.get("/{event_id}", response_model=events_schemas.EventResponse)
+async def read_event(event_id: int, db: AsyncSession = Depends(get_db)):
+    """Получить мероприятие по ID"""
+    db_event = await event_crud.get_event(db, event_id=event_id)
+    if db_event is None:
+        raise HTTPException(status_code=404, detail="Event not found")
+    
+    # Добавляем photo_url если есть фото
+    if db_event.has_photo:
+        db_event.photo_url = f"/events/{db_event.id}/photo"
+    
+    return db_event
+
+@event_router.get("/{event_id}/photo")
+async def get_event_photo(event_id: int):
+    """Получить фото мероприятия"""
+    photo_path = file_service.get_event_photo_path(event_id)
+    
+    if not photo_path:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Photo not found"
+        )
+    
+    return FileResponse(
+        photo_path,
+        media_type="image/jpeg",
+        filename=f"event_{event_id}.jpg"
+    )
+
+@event_router.post("/{event_id}/photo")
+async def upload_event_photo(
+    event_id: int,
+    photo: UploadFile = File(...),
+    db: AsyncSession = Depends(get_db)
+):
+    """Загрузить фото для мероприятия"""
+    # Проверяем существование мероприятия
+    existing_event = await event_crud.get_event(db, event_id)
+    if not existing_event:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Event not found"
+        )
+    
+    # Сохраняем фото
+    success = await file_service.save_event_photo(event_id, photo)
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to save photo"
+        )
+    
+    # Обновляем статус наличия фото
+    await event_crud.update_event_has_photo(db, event_id, True)
+    
+    return {"message": "Photo uploaded successfully"}
+
+@event_router.delete("/{event_id}/photo")
+async def delete_event_photo(
+    event_id: int,
+    db: AsyncSession = Depends(get_db)
+):
+    """Удалить фото мероприятия"""
+    # Проверяем существование мероприятия
+    existing_event = await event_crud.get_event(db, event_id)
+    if not existing_event:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Event not found"
+        )
+    
+    # Удаляем фото
+    success = file_service.delete_event_photo(event_id)
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to delete photo"
+        )
+    
+    # Обновляем статус наличия фото
+    await event_crud.update_event_has_photo(db, event_id, False)
+    
+    return {"message": "Photo deleted successfully"}
 
 
 
