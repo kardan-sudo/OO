@@ -24,7 +24,8 @@ class EmailSender:
             port=self.smtp_port,
             username=self.username,
             password=self.password,
-            use_tls=True,
+            start_tls=True,  # Включает STARTTLS для порта 587
+            use_tls=False
         )
 
     async def send_memorial_date_notification(self, memorial_date, users):

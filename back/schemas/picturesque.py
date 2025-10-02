@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
 from datetime import datetime
 from typing import Optional, List
 from enum import Enum
@@ -14,6 +14,7 @@ class SpotType(str, Enum):
     RELIGIOUS = "RELIGIOUS"
 
 class ScenicSpotBase(BaseModel):
+    id : int
     title: str
     spot_type: SpotType
     address: str
@@ -26,6 +27,13 @@ class ScenicSpotBase(BaseModel):
     entrance_fee: Optional[str] = None
     website: Optional[str] = None
     phone: Optional[str] = None
+    photo_url: str = None  # Добавлено поле photo_url
+
+    @validator('photo_url', pre=True, always=True)
+    def compute_photo_url(cls, v, values):
+        if 'id' in values:
+            return f"http://10.11.121.199:8000/static/scenic/{values['id']}.jpg"
+        return None
 
 class ScenicSpotCreate(ScenicSpotBase):
     pass

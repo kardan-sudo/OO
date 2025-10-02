@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     SMTP_SERVER: str = "smtp.gmail.com"
     SMTP_PORT: int = 587
     SMTP_USERNAME: str = "mannanovr70@gmail.com"
-    SMTP_PASSWORD: str = "oafd mldn jpqj lgxk"
+    SMTP_PASSWORD: str = "oafdmldnjpqjlgxk"
     FROM_EMAIL: str = "noreply@example.com"
 
     class Config:

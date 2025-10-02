@@ -30,15 +30,11 @@ async def create_quiz(
 @quiz_router.get("/", response_model=QuizListResponse)
 async def get_quizzes(
     db: AsyncSession = Depends(get_db),
-    skip: int = Query(0, ge=0, description="Смещение"),
-    limit: int = Query(20, ge=1, le=100, description="Лимит"),
     only_active: bool = Query(True, description="Только активные викторины"),
 ):
     """Получить список всех викторин"""
     quizzes = await quiz_crud.get_quizzes(
         db=db,
-        skip=skip,
-        limit=limit,
         only_active=only_active
     )
     
@@ -53,9 +49,6 @@ async def get_quizzes(
     return QuizListResponse(
         items=quizzes_with_count,
         total=total,
-        page=skip // limit + 1,
-        size=limit,
-        pages=(total + limit - 1) // limit
     )
 
 # Получить вопросы конкретной викторины

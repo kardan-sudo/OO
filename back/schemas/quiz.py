@@ -50,9 +50,7 @@ class QuizResponse(QuizBase):
 class QuizListResponse(BaseModel):
     items: List[QuizResponse]
     total: int
-    page: int
-    size: int
-    pages: int
+
 
 # Схемы для прохождения викторины
 class UserAnswer(BaseModel):
