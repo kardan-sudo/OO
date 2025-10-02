@@ -30,6 +30,3 @@ class User(Base):
         secondary=user_achievements,
         back_populates="users"
     )
-    
-# class BidUser(Base):
-    
