@@ -44,9 +44,9 @@ class QuizCRUD:
         stmt = select(Quiz)
         
         if only_active:
-            stmt = stmt.where(Quiz.is_active == True)
+            stmt = stmt
             
-        stmt = stmt.order_by(Quiz.created_at.desc()).offset(skip).limit(limit)
+        stmt = stmt
         result = await db.execute(stmt)
         return list(result.scalars().all())
 
@@ -54,7 +54,7 @@ class QuizCRUD:
         stmt = select(func.count(Quiz.id))
         
         if only_active:
-            stmt = stmt.where(Quiz.is_active == True)
+            stmt = stmt
             
         result = await db.execute(stmt)
         return result.scalar_one()
