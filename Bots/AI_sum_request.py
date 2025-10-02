@@ -94,8 +94,6 @@ def generate_text_with_model(prompt):
         # Парсинг ответа (стандартный для OpenAI)
         if api_response.get("choices") and len(api_response["choices"]) > 0:
             generated_text = api_response["choices"][0].get("message", {}).get("content")
-            print("\nОтвет модели:")
-            print(generated_text)
             return generated_text
         else:
             print("\nНе удалось получить сгенерированный текст из ответа API.")
