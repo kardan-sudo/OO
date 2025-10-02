@@ -1,6 +1,7 @@
+from enum import Enum
 from pydantic import BaseModel
-from datetime import date
-from typing import Optional
+from datetime import date, datetime
+from typing import List, Optional
 
 class UserLogin(BaseModel):
     username: str
@@ -39,3 +40,34 @@ class UserResponse(BaseModel):
 
 class UserID(BaseModel):
     id: int
+    
+class RequestStatus(str, Enum):
+    PENDING = "pending"
+    APPROVED = "approved"
+    REJECTED = "rejected"
+
+class RepresentationRequestBase(BaseModel):
+    position: str
+    organization: str
+
+class RepresentationRequestCreate(RepresentationRequestBase):
+    user_id: int
+
+class RepresentationRequestUpdate(BaseModel):
+    status: RequestStatus
+
+class RepresentationRequestResponse(RepresentationRequestBase):
+    id: int
+    user_id: int
+    status: RequestStatus
+    
+    class Config:
+        from_attributes = True
+
+class RepresentationRequestWithUserResponse(RepresentationRequestResponse):
+    user_full_name: str
+    user_email: Optional[str] = None  # Если есть email в модели User
+
+class RepresentationRequestList(BaseModel):
+    items: List[RepresentationRequestWithUserResponse]
+    total: int
