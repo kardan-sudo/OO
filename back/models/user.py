@@ -30,6 +30,12 @@ class User(Base):
         secondary=user_achievements,
         back_populates="users"
     )
+    
+    representation_requests = relationship(
+        "RepresentationRequest", 
+        back_populates="user",
+        cascade="all, delete"
+    )
 
 class RequestStatus(Enum):
     PENDING = "pending"
