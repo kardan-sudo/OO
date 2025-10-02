@@ -1,5 +1,5 @@
 from requests import Response
-from back.app import file_service
+from app.file_service import file_service
 from fastapi import Depends, HTTPException, status, Query, APIRouter, UploadFile, File, Response
 from sqlalchemy.ext.asyncio import AsyncSession  # Изменено для async
 from sqlalchemy import select

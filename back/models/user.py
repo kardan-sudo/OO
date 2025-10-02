@@ -31,5 +31,5 @@ class User(Base):
         back_populates="users"
     )
     
-class BidUser(Base):
+# class BidUser(Base):
     

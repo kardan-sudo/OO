@@ -112,7 +112,7 @@ class Comment(CommentBase):
         orm_mode = True
 
 # Схемы для ответов с детализацией
-class EventDetail(Event):
+class EventDetail(EventResponse):
     ratings: List[Rating] = []
     comments: List[Comment] = []
 
