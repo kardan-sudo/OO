@@ -17,8 +17,6 @@ class EventResponse(BaseModel):
     phone: str
     description: Optional[str] = None
     is_verified: bool = False
-    has_photo: bool = False  # Новое поле
-    photo_url: Optional[str] = None  # URL для доступа к фото
     
     class Config:
         from_attributes = True

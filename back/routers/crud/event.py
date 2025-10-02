@@ -14,16 +14,6 @@ class EventCRUD:
         await db.commit()
         await db.refresh(db_event)
         return db_event
-    
-    async def update_event_has_photo(self, db: AsyncSession, event_id: int, has_photo: bool) -> None:
-        """Обновляет статус наличия фото у мероприятия"""
-        stmt = (
-            update(Event)
-            .where(Event.id == event_id)
-            .values(has_photo=has_photo)
-        )
-        await db.execute(stmt)
-        await db.commit()
 
     async def get_events(
         self,  # Добавлен self

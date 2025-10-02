@@ -53,11 +53,6 @@ async def read_events(
     )
     events = await event_crud.get_events(db, filters=filters)
     
-    # Добавляем photo_url к каждому событию
-    for event in events:
-        if event.has_photo:
-            event.photo_url = f"/events/{event.id}/photo"
-    
     total = await event_crud.get_events_count(db, filters=filters)
     
     return events_schemas.EventListResponse(
@@ -74,29 +69,8 @@ async def read_event(event_id: int, db: AsyncSession = Depends(get_db)):
     db_event = await event_crud.get_event(db, event_id=event_id)
     if db_event is None:
         raise HTTPException(status_code=404, detail="Event not found")
-    
-    # Добавляем photo_url если есть фото
-    if db_event.has_photo:
-        db_event.photo_url = f"/events/{db_event.id}/photo"
-    
     return db_event
 
-@event_router.get("/{event_id}/photo")
-async def get_event_photo(event_id: int):
-    """Получить фото мероприятия"""
-    photo_path = file_service.get_event_photo_path(event_id)
-    
-    if not photo_path:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Photo not found"
-        )
-    
-    return FileResponse(
-        photo_path,
-        media_type="image/jpeg",
-        filename=f"event_{event_id}.jpg"
-    )
 
 @event_router.post("/{event_id}/photo")
 async def upload_event_photo(

@@ -11,9 +11,14 @@ from sqlalchemy.orm import Session
 from datetime import date
 from database.database import engine
 from routers.crud import broadcast as cast_crud
-
+from fastapi.staticfiles import StaticFiles
+from pathlib import Path
 
 app = FastAPI()
+
+# Монтируем папку с фото
+events_photos_dir = Path('/home/flymalysh/Рабочий стол/sbp/OO/back/static/events/')
+app.mount("/static/events", StaticFiles(directory=events_photos_dir), name="events_photos")
 
 app.include_router(event_router)
 app.include_router(picturesque_router)
