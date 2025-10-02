@@ -87,7 +87,7 @@ class QuizCRUD:
     # Вопросы
     async def get_quiz_questions(self, db: AsyncSession, quiz_id: int) -> List[Question]:
         stmt = (
-            select(Question)
+            select(Question).options(selectinload(Question.answers)) 
             .where(Question.quiz_id == quiz_id)
             .order_by(Question.order_index, Question.id)
         )
