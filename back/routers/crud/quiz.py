@@ -1,7 +1,8 @@
 from models.quiz import Answer, Question, Quiz
 from schemas.quiz import QuizCreate, UserAnswer
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, selectinload
+from sqlalchemy import select, func
+from sqlalchemy.orm import selectinload 
 from typing import List, Optional, Dict, Any
 
 class QuizCRUD:
@@ -67,26 +68,19 @@ class QuizCRUD:
 
     async def get_quizzes(
         self, 
-        db: AsyncSession, 
-        skip: int = 0, 
-        limit: int = 100,
+        db: AsyncSession,
         only_active: bool = True
     ) -> List[Quiz]:
-        stmt = select(Quiz)
+        stmt = select(Quiz).options(selectinload(Quiz.questions))  # ДОБАВИТЬ ЭТО: предзагрузка вопросов
         
-        if only_active:
-            stmt = stmt
-            
-        stmt = stmt
+        
+
+        
         result = await db.execute(stmt)
         return list(result.scalars().all())
 
     async def get_quizzes_count(self, db: AsyncSession, only_active: bool = True) -> int:
         stmt = select(func.count(Quiz.id))
-        
-        if only_active:
-            stmt = stmt
-            
         result = await db.execute(stmt)
         return result.scalar_one()
 
