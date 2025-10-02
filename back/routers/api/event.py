@@ -113,7 +113,6 @@ async def get_current_events(
     
     # Строим базовый запрос
     query = select(Event).where(
-        Event.start_date <= current_time,
         Event.end_date >= current_time
     )
     query = query.order_by(Event.rating.desc())
