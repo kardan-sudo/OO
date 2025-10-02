@@ -4,6 +4,7 @@ from routers.api.user import user_router
 from routers.api.picturesque import picturesque_router
 from routers.api.trip import walking_route_router
 from routers.api.quiz import quiz_router
+from routers.api.dates import memorial_date_router
 from utils.sender import email_sender
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
@@ -39,6 +40,7 @@ app.include_router(picturesque_router)
 app.include_router(walking_route_router)
 app.include_router(quiz_router)
 app.include_router(user_router)
+app.include_router(memorial_date_router)
 
 def check_memorial_dates():
     """Ежедневная проверка памятных дат"""
