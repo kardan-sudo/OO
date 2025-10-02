@@ -4,14 +4,14 @@ from typing import Optional, List
 from enum import Enum
 
 class SpotType(str, Enum):
-    PARK = "park"
-    ESTATE = "estate"
-    CASTLE = "castle"
-    MONUMENT = "monument"
-    NATURAL = "natural"
-    HISTORICAL = "historical"
-    ARCHITECTURAL = "architectural"
-    RELIGIOUS = "religious"
+    PARK = "PARK"
+    ESTATE = "ESTATE"
+    CASTLE = "CASTLE"
+    MONUMENT = "MONUMENT"
+    NATURAL = "NATURAL"
+    HISTORICAL = "HISTORICAL"
+    ARCHITECTURAL = "ARCHITECTURAL"
+    RELIGIOUS = "RELIGIOUS"
 
 class ScenicSpotBase(BaseModel):
     title: str

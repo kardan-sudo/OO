@@ -16,15 +16,16 @@ class ScenicSpotCRUD:
         spot_type: Optional[str] = None,
         only_verified: bool = True
     ) -> List[ScenicSpot]:
-        query = select(ScenicSpot).where(ScenicSpot.is_active == True)
+        query = select(ScenicSpot)
         
         if only_verified:
             query = query.where(ScenicSpot.is_verified == True)
             
         if spot_type:
+            # Если DB ENUM lowercase, конвертируй: query = query.where(ScenicSpot.spot_type == spot_type.lower())
             query = query.where(ScenicSpot.spot_type == spot_type)
             
-        query = query.order_by(ScenicSpot.rating.desc()).offset(skip).limit(limit)
+        query = query.offset(skip).limit(limit)
         
         result = await db.execute(query)
         return result.scalars().all()
@@ -35,12 +36,13 @@ class ScenicSpotCRUD:
         spot_type: Optional[str] = None,
         only_verified: bool = True
     ) -> int:
-        query = select(func.count(ScenicSpot.id)).where(ScenicSpot.is_active == True)
+        query = select(func.count(ScenicSpot.id))
         
         if only_verified:
             query = query.where(ScenicSpot.is_verified == True)
             
         if spot_type:
+            # Если DB ENUM lowercase, конвертируй: query = query.where(ScenicSpot.spot_type == spot_type.lower())
             query = query.where(ScenicSpot.spot_type == spot_type)
             
         result = await db.execute(query)
@@ -78,15 +80,20 @@ class ScenicSpotCRUD:
     
     async def get_unverified_scenic_spots(
         self, 
-        db: AsyncSession, 
+        db: AsyncSession,
+        skip: int = 0,  # Добавлено
+        limit: int = None  # Добавлено (None для всех, если не указано)
     ) -> List[ScenicSpot]:
-        """Получить список непроверенных мест"""
+        """Получить список непроверенных мест с пагинацией"""
         query = select(ScenicSpot).where(
-            ScenicSpot.is_active == True,
             ScenicSpot.is_verified == False  # Только непроверенные
         )
             
         query = query.order_by(ScenicSpot.id.desc())
+        
+        # Добавлена пагинация
+        if limit is not None:
+            query = query.offset(skip).limit(limit)
         
         result = await db.execute(query)
         return result.scalars().all()
@@ -97,7 +104,6 @@ class ScenicSpotCRUD:
     ) -> int:
         """Получить количество непроверенных мест"""
         query = select(func.count(ScenicSpot.id)).where(
-            ScenicSpot.is_active == True,
             ScenicSpot.is_verified == False  # Только непроверенные
         )
             

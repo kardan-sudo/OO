@@ -5,14 +5,14 @@ import enum
 
 
 class SpotType(enum.Enum):
-    PARK = "park"
-    ESTATE = "estate"
-    CASTLE = "castle"
-    MONUMENT = "monument"
-    NATURAL = "natural"
-    HISTORICAL = "historical"
-    ARCHITECTURAL = "architectural"
-    RELIGIOUS = "religious"
+    PARK = "PARK"
+    ESTATE = "ESTATE"
+    CASTLE = "CASTLE"
+    MONUMENT = "MONUMENT"
+    NATURAL = "NATURAL"
+    HISTORICAL = "HISTORICAL"
+    ARCHITECTURAL = "ARCHITECTURAL"
+    RELIGIOUS = "RELIGIOUS"
 
 class ScenicSpot(Base):
     __tablename__ = "scenic_spots"

@@ -75,15 +75,29 @@ async def create_scenic_spot(
     return db_spot
 
 @picturesque_router.get("/unverified", response_model=ScenicSpotList)
-async def read_unverified_scenic_spots(db: AsyncSession = Depends(get_db)):
+async def read_unverified_scenic_spots(
+    db: AsyncSession = Depends(get_db),
+    skip: Optional[int] = Query(0, ge=0, description="Смещение"),
+    limit: Optional[int] = Query(20, ge=1, le=100, description="Лимит")
+):
     """
-    Получить список непроверенных живописных мест с пагинацией и фильтрацией
+    Получить список непроверенных живописных мест с пагинацией
     """
-    spots = await scenic_spot_crud.get_unverified_scenic_spots(db=db)
+    spots = await scenic_spot_crud.get_unverified_scenic_spots(db=db, skip=skip, limit=limit)
     
     total = await scenic_spot_crud.get_unverified_scenic_spots_count(db=db)
     
-    return ScenicSpotList(items=spots, total=total)
+    # Вычисли page и pages
+    page = skip // limit + 1 if limit > 0 else 1
+    pages = (total + limit - 1) // limit if limit > 0 else 0
+    
+    return ScenicSpotList(
+        items=spots,
+        total=total,
+        page=page,
+        size=limit,
+        pages=pages
+    )
 
 @picturesque_router.patch("/{spot_id}/verify", response_model=ScenicSpotResponse)
 async def verify_scenic_spot(

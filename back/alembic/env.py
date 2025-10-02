@@ -8,7 +8,7 @@ from database.database import engine, Base
 from models.user import User
 from models.events import Event, Rating, Comment
 from models.broadcast import MemorialDate
-from models.picturesque import ScenicSpot
+from models.picturesque import ScenicSpot, SpotType
 from models.achievement import Achievement
 from models.quiz import Quiz, Question, Answer
 from models.trip import WalkingRoute
