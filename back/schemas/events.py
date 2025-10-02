@@ -63,9 +63,6 @@ class EventUpdate(BaseModel):
 class EventListResponse(BaseModel):
     items: List[EventResponse]
     total: int
-    page: int
-    size: int
-    pages: int
 
 class VerificationUpdate(BaseModel):
     is_verified: bool

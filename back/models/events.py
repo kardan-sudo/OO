@@ -20,6 +20,7 @@ class Event(Base):
     description_summ = Column(Text)
     website = Column(String(200))
     phone = Column(String(20))
+    is_verified = Column(Boolean, default=False)
     
     ratings = relationship("Rating", back_populates="event", cascade="all, delete")
     comments = relationship("Comment", back_populates="event", cascade="all, delete")

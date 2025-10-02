@@ -1,6 +1,6 @@
 from requests import Response
 from app.file_service import file_service
-from fastapi import Depends, HTTPException, status, Query, APIRouter, UploadFile, File, Response
+from fastapi import Depends, HTTPException, status, Query, APIRouter, UploadFile, File, Response, Form
 from sqlalchemy.ext.asyncio import AsyncSession  # Изменено для async
 from sqlalchemy import select
 from fastapi.responses import FileResponse
@@ -14,16 +14,40 @@ from database.database import get_db
 
 event_router = APIRouter(prefix="/events", tags=["events"])
 
-# Роуты для мероприятий
 @event_router.post("/", response_model=events_schemas.EventResponse, status_code=status.HTTP_201_CREATED)
 async def create_event(
-    event: events_schemas.EventCreate, 
+    title: str = Form(...),
+    event_type: str = Form(...),
+    start_date: datetime = Form(...),  # FastAPI автоматически парсит ISO-строку в datetime
+    end_date: datetime = Form(...),
+    address: str = Form(...),
+    x_coordinate: float = Form(...),
+    y_coordinate: float = Form(...),
+    organizer: str = Form(...),
+    description: Optional[str] = Form(None),
+    website: str = Form(...),
+    phone: str = Form(...),
     photo: Optional[UploadFile] = File(None),
     db: AsyncSession = Depends(get_db)
 ):
     """Создать мероприятие с возможностью загрузки фото"""
+    # Создаём объект EventCreate из полей формы (Pydantic автоматически валидирует, включая валидатор end_date)
+    event_data = events_schemas.EventCreate(
+        title=title,
+        event_type=event_type,
+        start_date=start_date,
+        end_date=end_date,
+        address=address,
+        x_coordinate=x_coordinate,
+        y_coordinate=y_coordinate,
+        organizer=organizer,
+        description=description,
+        website=website,
+        phone=phone
+    )
+    
     # Создаем мероприятие
-    db_event = await event_crud.create_event(db=db, event_obj=event)
+    db_event = await event_crud.create_event(db=db, event_obj=event_data)
     
     # Если есть фото - сохраняем его
     if photo:
@@ -57,11 +81,48 @@ async def read_events(
     
     return events_schemas.EventListResponse(
         items=events,
-        total=total,
-        page=skip // limit + 1,
-        size=limit,
-        pages=(total + limit - 1) // limit
+        total=total
     )
+    
+@event_router.get("/unverified", response_model=events_schemas.EventListResponse)
+async def get_unverified_events(
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Получить список непроверенных событий для модерации
+    """
+    events = await event_crud.get_unverified_events(
+        db=db
+    )
+    
+    total = await event_crud.get_unverified_events_count(db=db)
+    
+    return events_schemas.EventListResponse(
+        items=events,
+        total=total
+    )
+    
+@event_router.get("/top_current", response_model=List[events_schemas.EventResponse])
+async def get_current_events(
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Получить мероприятия, которые проводятся в данный момент,
+    отсортированные по убыванию рейтинга
+    """
+    current_time = datetime.now()
+    
+    # Строим базовый запрос
+    query = select(Event).where(
+        Event.start_date <= current_time,
+        Event.end_date >= current_time
+    )
+    query = query.order_by(Event.rating.desc())
+    
+    result = await db.execute(query)
+    events = result.scalars().all()
+    
+    return events
 
 @event_router.get("/{event_id}", response_model=events_schemas.EventResponse)
 async def read_event(event_id: int, db: AsyncSession = Depends(get_db)):
@@ -128,55 +189,6 @@ async def delete_event_photo(
     return {"message": "Photo deleted successfully"}
 
 
-
-@event_router.get("/top_current", response_model=List[events_schemas.EventResponse])
-async def get_current_events(
-    db: AsyncSession = Depends(get_db),
-    skip: int = Query(0, ge=0, description="Количество записей для пропуска"),
-    limit: int = Query(10, ge=1, le=100, description="Количество записей для возврата")
-):
-    """
-    Получить мероприятия, которые проводятся в данный момент,
-    отсортированные по убыванию рейтинга
-    """
-    current_time = datetime.now()
-    
-    # Строим базовый запрос
-    query = select(Event).where(
-        Event.start_date <= current_time,
-        Event.end_date >= current_time
-    )
-    query = query.order_by(Event.rating.desc()).offset(skip).limit(limit)
-    
-    result = await db.execute(query)
-    events = result.scalars().all()
-    
-    return events
-
-@event_router.get("/unverified", response_model=events_schemas.EventListResponse)
-async def get_unverified_events(
-    db: AsyncSession = Depends(get_db),
-    skip: Optional[int] = Query(0, ge=0, description="Смещение"),
-    limit: Optional[int] = Query(20, ge=1, le=100, description="Лимит")
-):
-    """
-    Получить список непроверенных событий для модерации
-    """
-    events = await event_crud.get_unverified_events(
-        db=db,
-        skip=skip,
-        limit=limit
-    )
-    
-    total = await event_crud.get_unverified_events_count(db=db)
-    
-    return events_schemas.EventListResponse(
-        items=events,
-        total=total,
-        page=skip // limit + 1,
-        size=limit,
-        pages=(total + limit - 1) // limit
-    )
 
 # Обновить статус проверки события
 @event_router.put("/{event_id}/verification", response_model=events_schemas.EventResponse)
