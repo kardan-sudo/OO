@@ -13,9 +13,19 @@ from database.database import engine
 from routers.crud import broadcast as cast_crud
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
+
+# Добавь это перед определением роутов
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Разреши все origins (для разработки). Для продакшена укажи конкретные, напр. ["http://localhost:3000"]
+    allow_credentials=True,
+    allow_methods=["*"],  # Разреши все методы (GET, POST, OPTIONS и т.д.)
+    allow_headers=["*"],  # Разреши все заголовки
+)
 # Монтируем папку с фото
 events_photos_dir = Path('/home/flymalysh/Рабочий стол/sbp/OO/back/static/events/')
 app.mount("/static/events", StaticFiles(directory=events_photos_dir), name="events_photos")

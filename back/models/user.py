@@ -1,7 +1,8 @@
-from sqlalchemy import Column, Integer, String, Boolean, Date, Table, ForeignKey, Enum, DateTime
+from sqlalchemy import Column, Integer, String, Boolean, Date, Table, ForeignKey, Enum as SqlEnum, DateTime  # Добавь "as SqlEnum" для ясности
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from database.database import Base
+from enum import Enum as PyEnum  # Импорт Python-enum
 
 # Ассоциативная таблица для many-to-many связи (User <-> Achievement)
 user_achievements = Table(
@@ -38,7 +39,8 @@ class User(Base):
         cascade="all, delete"
     )
 
-class RequestStatus(Enum):
+# Исправленное определение enum
+class RequestStatus(PyEnum):
     PENDING = "pending"
     APPROVED = "approved"
     REJECTED = "rejected"
@@ -50,7 +52,7 @@ class RepresentationRequest(Base):
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
     position = Column(String(200), nullable=False)  # Должность
     organization = Column(String(200), nullable=False)  # Организация
-    status = Column(Enum(RequestStatus), default=RequestStatus.PENDING, index=True)
+    status = Column(SqlEnum(RequestStatus), default=RequestStatus.PENDING, index=True)  # Используй SqlEnum
     
     # Связь с пользователем
     user = relationship("User", back_populates="representation_requests")

@@ -5,7 +5,7 @@ from sqlalchemy import pool
 
 from alembic import context
 from database.database import engine, Base
-from models.user import User
+from models.user import User, RepresentationRequest
 from models.events import Event, Rating, Comment
 from models.broadcast import MemorialDate
 from models.picturesque import ScenicSpot, SpotType
