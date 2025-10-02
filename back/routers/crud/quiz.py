@@ -1,33 +1,64 @@
 from models.quiz import Answer, Question, Quiz
 from schemas.quiz import QuizCreate, UserAnswer
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, and_
+from sqlalchemy import select, func, selectinload
 from typing import List, Optional, Dict, Any
 
 class QuizCRUD:
     # Викторины
     async def create_quiz(self, db: AsyncSession, quiz_data: QuizCreate) -> Quiz:
-        """Создать викторину с вопросами и ответами"""
-        quiz_dict = quiz_data.dict(exclude={'questions'})
-        db_quiz = Quiz(**quiz_dict)
-        db.add(db_quiz)
-        await db.flush()  # Получаем ID викторины
-        
-        # Создаем вопросы и ответы
-        for question_data in quiz_data.questions:
-            question_dict = question_data.dict(exclude={'answers'})
-            db_question = Question(quiz_id=db_quiz.id, **question_dict)
-            db.add(db_question)
-            await db.flush()  # Получаем ID вопроса
+        """Создать викторину с вопросами и ответами (оптимизированная версия)"""
+        try:
+            # Создаем викторину
+            quiz_dict = quiz_data.dict(exclude={'questions'})
+            db_quiz = Quiz(**quiz_dict)
+            db.add(db_quiz)
+            await db.commit()
+            await db.refresh(db_quiz)
             
-            # Создаем ответы
-            for answer_data in question_data.answers:
-                db_answer = Answer(question_id=db_question.id, **answer_data.dict())
-                db.add(db_answer)
-        
-        await db.commit()
-        await db.refresh(db_quiz)
-        return db_quiz
+            # Подготавливаем все вопросы для bulk insert
+            questions_to_add = []
+            answers_to_add = []
+            
+            for question_data in quiz_data.questions:
+                question_dict = question_data.dict(exclude={'answers'})
+                db_question = Question(quiz_id=db_quiz.id, **question_dict)
+                questions_to_add.append(db_question)
+            
+            # Добавляем все вопросы одним запросом
+            db.add_all(questions_to_add)
+            await db.commit()
+            
+            # Обновляем ID вопросов
+            for db_question in questions_to_add:
+                await db.refresh(db_question)
+            
+            # Подготавливаем все ответы
+            for i, question_data in enumerate(quiz_data.questions):
+                for answer_data in question_data.answers:
+                    db_answer = Answer(
+                        question_id=questions_to_add[i].id, 
+                        **answer_data.dict()
+                    )
+                    answers_to_add.append(db_answer)
+            
+            # Добавляем все ответы одним запросом
+            db.add_all(answers_to_add)
+            await db.commit()
+            
+            # Загружаем полный объект с отношениями
+            result = await db.execute(
+                select(Quiz)
+                .options(selectinload(Quiz.questions).selectinload(Question.answers))
+                .where(Quiz.id == db_quiz.id)
+            )
+            db_quiz = result.scalar_one()
+            
+            return db_quiz
+            
+        except Exception as e:
+            await db.rollback()
+            raise e
 
     async def get_quiz(self, db: AsyncSession, quiz_id: int) -> Optional[Quiz]:
         stmt = select(Quiz).where(Quiz.id == quiz_id)
