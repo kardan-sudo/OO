@@ -2,7 +2,6 @@ from pydantic import BaseModel, validator
 from datetime import datetime
 from typing import List, Optional
 
-
 class EventResponse(BaseModel):
     id: int
     title: str
@@ -18,6 +17,8 @@ class EventResponse(BaseModel):
     phone: str
     description: Optional[str] = None
     is_verified: bool = False
+    has_photo: bool = False  # Новое поле
+    photo_url: Optional[str] = None  # URL для доступа к фото
     
     class Config:
         from_attributes = True
@@ -44,6 +45,10 @@ class EventBase(BaseModel):
 class EventCreate(EventBase):
     pass
 
+class EventCreateWithPhoto(BaseModel):
+    event_data: EventCreate
+    # Фото будет обрабатываться отдельно
+
 class EventUpdate(BaseModel):
     title: Optional[str] = None
     event_type: Optional[str] = None
@@ -54,13 +59,8 @@ class EventUpdate(BaseModel):
     y_coordinate: Optional[float] = None
     organizer: Optional[str] = None
     description: Optional[str] = None
-
-class Event(EventBase):
-    id: int
-    rating: float
-    
-    class Config:
-        orm_mode = True
+    website: Optional[str] = None
+    phone: Optional[str] = None
 
 class EventListResponse(BaseModel):
     items: List[EventResponse]
@@ -70,7 +70,7 @@ class EventListResponse(BaseModel):
     pages: int
 
 class VerificationUpdate(BaseModel):
-    is_verified: bool = False
+    is_verified: bool
 
 # Схемы для оценок
 class RatingBase(BaseModel):

@@ -19,7 +19,8 @@ class Event(Base):
     description = Column(Text)
     website = Column(String(200))
     phone = Column(String(20))
-    is_verified = Column(Boolean, default=False) 
+    is_verified = Column(Boolean, default=False)
+    has_photo = Column(Boolean, default=False)  # Новое поле - есть ли фото
     
     ratings = relationship("Rating", back_populates="event", cascade="all, delete")
     comments = relationship("Comment", back_populates="event", cascade="all, delete")

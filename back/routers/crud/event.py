@@ -8,12 +8,22 @@ from sqlalchemy.orm import selectinload  # импорт в начале файл
 # CRUD для мероприятий
 
 class EventCRUD:
-    async def create_event(self, db: AsyncSession, event_obj: events.EventCreate) -> Event:  # Добавлен self
+    async def create_event(self, db: AsyncSession, event_obj: events.EventCreate) -> Event:
         db_event = Event(**event_obj.dict())
         db.add(db_event)
         await db.commit()
         await db.refresh(db_event)
         return db_event
+    
+    async def update_event_has_photo(self, db: AsyncSession, event_id: int, has_photo: bool) -> None:
+        """Обновляет статус наличия фото у мероприятия"""
+        stmt = (
+            update(Event)
+            .where(Event.id == event_id)
+            .values(has_photo=has_photo)
+        )
+        await db.execute(stmt)
+        await db.commit()
 
     async def get_events(
         self,  # Добавлен self
@@ -71,7 +81,30 @@ class EventCRUD:
         
         result = await db.execute(stmt)
         return list(result.scalars().all())
-    
+
+    async def get_events_count(
+        self,
+        db: AsyncSession,
+        filters: Optional[events.EventFilter] = None
+    ) -> int:
+        """Получить общее количество событий с учетом фильтров"""
+        stmt = select(func.count(Event.id))
+        
+        if filters:
+            if filters.event_type:
+                stmt = stmt.filter(Event.event_type == filters.event_type)
+            if filters.start_date_from:
+                stmt = stmt.filter(Event.start_date >= filters.start_date_from)
+            if filters.start_date_to:
+                stmt = stmt.filter(Event.start_date <= filters.start_date_to)
+            if filters.min_rating:
+                stmt = stmt.filter(Event.rating >= filters.min_rating)
+            if filters.organizer:
+                stmt = stmt.filter(Event.organizer.ilike(f"%{filters.organizer}%"))
+        
+        result = await db.execute(stmt)
+        return result.scalar_one()
+
     async def get_unverified_events_count(self, db: AsyncSession) -> int:  # Добавлен self
         """Получить количество непроверенных событий"""
         stmt = select(func.count(Event.id)).where(
