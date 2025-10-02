@@ -4,10 +4,10 @@ from psycopg2.extras import RealDictCursor
 
 conn_params = {
     "user": "postgres",
-    "password": "2418908595",
-    "host": "10.11.121.199",
-    "port": "54320",
-    "database": "sbp"
+    "password": "123",
+    "host": "localhost",
+    "port": "5432",
+    "database": "postgres"
 }
 def get_event_list():
     event_list = []
