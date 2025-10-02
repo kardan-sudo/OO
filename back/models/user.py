@@ -15,6 +15,7 @@ class User(Base):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
+    email = Column(String, nullable=True)  # ФИО (полное имя)
     full_name = Column(String, nullable=False)  # ФИО (полное имя)
     date_of_birth = Column(Date, nullable=False)  # Дата рождения
     username = Column(String, unique=True, nullable=False, index=True)  # Логин (уникальный)

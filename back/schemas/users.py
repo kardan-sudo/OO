@@ -8,6 +8,7 @@ class UserLogin(BaseModel):
 
 class UserCreate(BaseModel):
     full_name: str
+    email: str
     date_of_birth: date
     username: str
     password: str
@@ -25,6 +26,7 @@ class UserUpdate(BaseModel):
 class UserResponse(BaseModel):
     id: int
     full_name: str
+    email: str
     date_of_birth: date
     username: str
     is_organizer: bool
