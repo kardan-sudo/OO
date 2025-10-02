@@ -1,26 +1,82 @@
 import telebot
 from telebot import types
 import psycopg2
-from get_db import get_event_list, get_event_data
+from get_db import *
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
+import time
+from message import *
+from AI_sum_request import generate_text_with_model
 
 bot = telebot.TeleBot('8286621737:AAHEZDZvZo-wG-hhpOpbFIx7TDDtPENHk7c')
 
 # Словарь для хранения состояния пользователей
 user_states = {}
 
+def get_event_image_path(event_id):
+    """Получает путь к изображению мероприятия"""
+    # Сначала проверяем jpg
+    jpg_path = Path(f'/home/radmir/OO/back/static/image/{event_id}.jpg')
+    if jpg_path.exists():
+        return jpg_path
+    
+    # Затем проверяем jpeg
+    jpeg_path = Path(f'/home/radmir/OO/back/static/image/{event_id}.jpeg')
+    if jpeg_path.exists():
+        return jpeg_path
+    
+    # Если изображение не найдено, возвращаем None
+    return None
+
+def safe_send_message(chat_id, text, **kwargs):
+    """Безопасная отправка сообщения с обработкой ошибок"""
+    try:
+        return bot.send_message(chat_id, text, **kwargs)
+    except Exception as e:
+        print(f"Ошибка при отправке сообщения: {e}")
+        return None
+
+def safe_send_photo(chat_id, photo, caption, **kwargs):
+    """Безопасная отправка фото с обработкой ошибок"""
+    try:
+        return bot.send_photo(chat_id, photo, caption=caption, **kwargs)
+    except Exception as e:
+        print(f"Ошибка при отправке фото: {e}")
+        return None
+
+def safe_delete_message(chat_id, message_id):
+    """Безопасное удаление сообщения"""
+    try:
+        bot.delete_message(chat_id, message_id)
+        return True
+    except Exception as e:
+        print(f"Ошибка при удалении сообщения: {e}")
+        return False
+
+def safe_edit_message_text(chat_id, message_id, text, **kwargs):
+    """Безопасное редактирование текстового сообщения"""
+    try:
+        bot.edit_message_text(text, chat_id, message_id, **kwargs)
+        return True
+    except Exception as e:
+        print(f"Ошибка при редактировании текста: {e}")
+        return False
+
+def safe_edit_message_caption(chat_id, message_id, caption, **kwargs):
+    """Безопасное редактирование подписи к фото"""
+    try:
+        bot.edit_message_caption(caption, chat_id, message_id, **kwargs)
+        return True
+    except Exception as e:
+        print(f"Ошибка при редактировании подписи: {e}")
+        return False
+
 @bot.message_handler(commands=['start'])
 def start(message):
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     start = types.KeyboardButton('Вперёд!')
     markup.add(start)
-    bot.send_message(message.from_user.id, '''
-Привет! 👋 Я — твой персональный бот-навигатор по культурным событиям Орла и Орловской области. 🎭🎨
-
-Здесь ты найдёшь всё самое интересное: концерты 🎵, выставки 🖼️, театральные постановки 🎬 и многое другое! Просто выбери категорию, которая тебе по душе, и получи актуальную информацию о ближайших событиях. 📅✨
-
-Если нужна помощь или советы — я всегда рядом! 🤖💬 Готов сделать твой досуг насыщенным и увлекательным! Поехали? 🚀
-''', reply_markup=markup)
+    safe_send_message(message.from_user.id, hello_mes, reply_markup=markup)
 
 @bot.message_handler(content_types=['text'])
 def get_text_messages(message):
@@ -30,19 +86,14 @@ def get_text_messages(message):
         route = types.KeyboardButton("Маршруты")
         pict_places = types.KeyboardButton("Живописные места")
         markup.add(event, route, pict_places)
-        bot.send_message(message.from_user.id, '''
-Выбери, что тебя интересует:
-
-🗓️ Мероприятия — самые свежие и интересные события в Орле и Орловской области
-🗺️ Маршруты — лучшие культурные и туристические маршруты по региону
-🌄 Живописные места — вдохновляющие уголки природы и красоты рядом с тобой''', reply_markup=markup)
+        safe_send_message(message.from_user.id, type_event_mes, reply_markup=markup)
 
     elif message.text == 'Мероприятия':
         markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
         event_list = [types.KeyboardButton(event) for event in get_event_list()]
         event_list.append(types.KeyboardButton("Главное меню"))
         markup.add(*event_list)
-        bot.send_message(message.from_user.id, '**Выберите тип мероприятия:**', parse_mode='Markdown', reply_markup=markup)
+        safe_send_message(message.from_user.id, '**Выберите тип мероприятия:**', parse_mode='Markdown', reply_markup=markup)
 
     elif message.text == 'Главное меню':
         markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
@@ -50,12 +101,7 @@ def get_text_messages(message):
         route = types.KeyboardButton("Маршруты")
         pict_places = types.KeyboardButton("Живописные места")
         markup.add(event, route, pict_places)
-        bot.send_message(message.from_user.id, '''
-Выбери, что тебя интересует:
-
-🗓️ Мероприятия — самые свежие и интересные события в Орле и Орловской области
-🗺️ Маршруты — лучшие культурные и туристические маршруты по региону
-🌄 Живописные места — вдохновляющие уголки природы и красоты рядом с тобой''', reply_markup=markup)
+        safe_send_message(message.from_user.id, type_event_mes, reply_markup=markup)
 
     elif message.text in ['Концерты', 'Спектакли', 'Выставки']:
         # Получаем данные и фильтруем их
@@ -81,7 +127,8 @@ def get_text_messages(message):
             'event_type': message.text,
             'events': filtered_events,
             'current_index': 0,
-            'message_id': None  # Будем хранить ID сообщения для редактирования
+            'message_id': None,
+            'has_photo': False
         }
         
         # Показываем первое мероприятие
@@ -96,11 +143,20 @@ def show_event(user_id, first_time=False):
     current_index = state['current_index']
     
     if not events:
-        bot.send_message(user_id, 'К сожалению, на ближайшие 30 дней мероприятий не найдено.')
+        safe_send_message(user_id, 'К сожалению, на ближайшие 30 дней мероприятий не найдено.')
         return
     
     data = events[current_index]
+
+    if (data['description_summ'] == None) or (data['description_summ'] == ''):
+        description_summ = generate_text_with_model(AI_prompt+data['description'])
+        data['description_summ'] = description_summ
+        update_event_data_safe(data['id'],description_summ=description_summ)
+
     event_type = state['event_type']
+    
+    # Получаем путь к изображению
+    data_image = get_event_image_path(data['id'])
     
     # Создаем клавиатуру для навигации
     markup = types.InlineKeyboardMarkup()
@@ -117,7 +173,7 @@ def show_event(user_id, first_time=False):
     
     markup.row(*nav_buttons)
     
-    # Формируем сообщение в зависимости от типа мероприятия
+    # Формируем сообщение
     if event_type == 'Выставки':
         date_start = data['start_date']
         date_end = data['end_date']
@@ -127,71 +183,81 @@ def show_event(user_id, first_time=False):
 Время проведения: {date_start.strftime("%d.%m %H:%M")} - {date_end.strftime("%d.%m %H:%M")}
 Адрес: {data['address']}
 
-Описание: {data['description'][:500]}{'...' if len(data['description']) > 500 else ''}
+Описание (Сгенерировано ИИ):
+{data['description_summ']}
 
 [Купить билет]({data['website']})
 '''
-        if first_time:
-            # Первый раз отправляем фото с подписью
-            try:
-                with open('/home/radmir/Bots/Telegram/images.jpeg', 'rb') as photo:
-                    sent_message = bot.send_photo(user_id, photo, caption=caption, parse_mode='Markdown', reply_markup=markup)
-                    state['message_id'] = sent_message.message_id
-                    state['has_photo'] = True
-            except:
-                sent_message = bot.send_message(user_id, caption, parse_mode='Markdown', reply_markup=markup)
-                state['message_id'] = sent_message.message_id
-                state['has_photo'] = False
-        else:
-            # Редактируем существующее сообщение
-            if state.get('has_photo'):
-                try:
-                    bot.edit_message_caption(
-                        chat_id=user_id,
-                        message_id=state['message_id'],
-                        caption=caption,
-                        parse_mode='Markdown',
-                        reply_markup=markup
-                    )
-                except Exception as e:
-                    # Если не удалось отредактировать подпись, отправляем новое сообщение
-                    with open('/home/radmir/Bots/Telegram/images.jpeg', 'rb') as photo:
-                        sent_message = bot.send_photo(user_id, photo, caption=caption, parse_mode='Markdown', reply_markup=markup)
-                        state['message_id'] = sent_message.message_id
-            else:
-                bot.edit_message_text(
-                    chat_id=user_id,
-                    message_id=state['message_id'],
-                    text=caption,
-                    parse_mode='Markdown',
-                    reply_markup=markup
-                )
     else:
         date = data['start_date']
-        message_text = f'''
+        caption = f'''
 *{data['title']}*
 
 Начало: {date.strftime("%d.%m %H:%M")}
 Адрес: {data['address']}
 
-Описание: {data['description'][:500]}{'...' if len(data['description']) > 500 else ''}
+Описание (Сгенерировано ИИ): 
+{data['description_summ']}
 
 [Купить билет]({data['website']})
 '''
-        if first_time:
-            # Первый раз отправляем текстовое сообщение
-            sent_message = bot.send_message(user_id, message_text, parse_mode='Markdown', reply_markup=markup)
-            state['message_id'] = sent_message.message_id
-            state['has_photo'] = False
+    
+    # Для первого показа
+    if first_time:
+        if data_image and data_image.exists():
+            # Пытаемся отправить фото
+            with open(data_image, 'rb') as photo:
+                sent_message = safe_send_photo(user_id, photo, caption, parse_mode='Markdown', reply_markup=markup)
+            if sent_message:
+                state['message_id'] = sent_message.message_id
+                state['has_photo'] = True
+            else:
+                # Если фото не отправилось, отправляем текст
+                sent_message = safe_send_message(user_id, caption, parse_mode='Markdown', reply_markup=markup)
+                if sent_message:
+                    state['message_id'] = sent_message.message_id
+                    state['has_photo'] = False
         else:
-            # Редактируем существующее сообщение
-            bot.edit_message_text(
-                chat_id=user_id,
-                message_id=state['message_id'],
-                text=message_text,
-                parse_mode='Markdown',
-                reply_markup=markup
-            )
+            # Если фото нет, отправляем текст
+            sent_message = safe_send_message(user_id, caption, parse_mode='Markdown', reply_markup=markup)
+            if sent_message:
+                state['message_id'] = sent_message.message_id
+                state['has_photo'] = False
+    else:
+        # Для последующих показов (навигация)
+        old_message_id = state.get('message_id')
+        old_has_photo = state.get('has_photo', False)
+        
+        # Всегда отправляем новое сообщение и удаляем старое
+        if data_image and data_image.exists():
+            # Отправляем новое фото
+            with open(data_image, 'rb') as photo:
+                sent_message = safe_send_photo(user_id, open(data_image, 'rb'), caption, parse_mode='Markdown', reply_markup=markup)
+            if sent_message:
+                # Удаляем старое сообщение, если оно есть
+                if old_message_id:
+                    safe_delete_message(user_id, old_message_id)
+                
+                state['message_id'] = sent_message.message_id
+                state['has_photo'] = True
+            else:
+                # Если фото не отправилось, отправляем текст
+                sent_message = safe_send_message(user_id, caption, parse_mode='Markdown', reply_markup=markup)
+                if sent_message:
+                    if old_message_id:
+                        safe_delete_message(user_id, old_message_id)
+                    state['message_id'] = sent_message.message_id
+                    state['has_photo'] = False
+        else:
+            # Отправляем новый текст
+            sent_message = safe_send_message(user_id, caption, parse_mode='Markdown', reply_markup=markup)
+            if sent_message:
+                # Удаляем старое сообщение, если оно есть
+                if old_message_id:
+                    safe_delete_message(user_id, old_message_id)
+                
+                state['message_id'] = sent_message.message_id
+                state['has_photo'] = False
 
 @bot.callback_query_handler(func=lambda call: True)
 def handle_callback(call):
@@ -221,4 +287,12 @@ def handle_callback(call):
     elif data == 'page':
         bot.answer_callback_query(call.id, f"Страница {state['current_index'] + 1} из {len(state['events'])}")
 
-bot.polling(none_stop=True, interval=0)
+# Убедитесь, что запущен только один экземпляр бота
+if __name__ == '__main__':
+    try:
+        print("Бот запущен...")
+        bot.polling(none_stop=True, interval=1, timeout=60)
+    except Exception as e:
+        print(f"Ошибка при запуске бота: {e}")
+        print("Убедитесь, что не запущено других экземпляров бота")
+        time.sleep(5)

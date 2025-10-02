@@ -24,8 +24,40 @@ def get_event_list():
 def get_event_data(event_type):
     with psycopg2.connect(**conn_params) as connection:
         with connection.cursor(cursor_factory=RealDictCursor) as cursor:
-            cursor.execute(f"select id,title,event_type,start_date,end_date,address,description,website,phone FROM public.events where event_type = '{event_type}';")
+            cursor.execute(f"select id,title,event_type,start_date,end_date,address,description,website,phone,description_summ FROM public.events where event_type = '{event_type}';")
             records = cursor.fetchall()
 
     return records
 
+def update_event_data_safe(event_id, **kwargs):
+    """
+    Безопасное обновление данных события с проверкой допустимых полей
+    """
+    allowed_fields = {
+        'title', 'event_type', 'start_date', 'end_date', 
+        'address', 'description', 'website', 'phone', 'description_summ'
+    }
+    
+    update_fields = {k: v for k, v in kwargs.items() if k in allowed_fields}
+    
+    if not update_fields:
+        return 0 
+    
+    with psycopg2.connect(**conn_params) as connection:
+        with connection.cursor() as cursor:
+            set_parts = []
+            values = []
+            
+            for field, value in update_fields.items():
+                set_parts.append(f"{field} = %s")
+                values.append(value)
+            
+            values.append(event_id)
+            
+            sql = f"UPDATE public.events SET {', '.join(set_parts)} WHERE id = %s"
+            cursor.execute(sql, values)
+            connection.commit()
+            
+            return cursor.rowcount
+        
+update_event_data_safe(2, description_summ = 'test')
