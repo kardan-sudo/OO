@@ -6,12 +6,13 @@ from typing import Optional
 class FileService:
     def __init__(self):
         self.static_dir = Path("static")
-        self.events_photos_dir = self.static_dir / "events"
-        self._ensure_directories()
+        # self.events_photos_dir = self.static_dir / "events"
+        self.events_photos_dir = '/home/flymalysh/Рабочий стол/sbp/OO/back/static/events/'
+        # self._ensure_directories()
     
-    def _ensure_directories(self):
-        """Создает необходимые директории если они не существуют"""
-        self.events_photos_dir.mkdir(parents=True, exist_ok=True)
+    # def _ensure_directories(self):
+    #     """Создает необходимые директории если они не существуют"""
+    #     self.events_photos_dir.mkdir(parents=True, exist_ok=True)
     
     async def save_event_photo(self, event_id: int, photo: UploadFile) -> bool:
         """Сохраняет фото мероприятия"""
@@ -40,19 +41,17 @@ class FileService:
     
     def get_event_photo_path(self, event_id: int) -> Optional[Path]:
         """Возвращает путь к фото мероприятия если оно существует"""
-        filename = f"{event_id}.jpg"
-        file_path = self.events_photos_dir / filename
-        return file_path if file_path.exists() else None
+        filename = f"{event_id}.jpeg"
+        file_path = self.events_photos_dir + filename
+        return file_path #if file_path.exists() else None
     
-    def delete_event_photo(self, event_id: int) -> bool:
-        """Удаляет фото мероприятия"""
-        try:
-            file_path = self.get_event_photo_path(event_id)
-            if file_path:
-                file_path.unlink()
-            return True
-        except Exception as e:
-            print(f"Error deleting photo: {e}")
-            return False
+    # def delete_event_photo(self, event_id: int) -> bool:
+    #     """Удаляет фото мероприятия"""
+    #     try:
+    #         file_path = self.get_event_photo_path(event_id)
+    #         return True
+    #     except Exception as e:
+    #         print(f"Error deleting photo: {e}")
+    #         return False
 
 file_service = FileService()
