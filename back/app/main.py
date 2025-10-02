@@ -19,6 +19,8 @@ app = FastAPI()
 # Монтируем папку с фото
 events_photos_dir = Path('/home/flymalysh/Рабочий стол/sbp/OO/back/static/events/')
 app.mount("/static/events", StaticFiles(directory=events_photos_dir), name="events_photos")
+routers_photos_dir = Path('/home/flymalysh/Рабочий стол/sbp/OO/back/static/routes/')
+app.mount("/static/routes", StaticFiles(directory=routers_photos_dir), name="routes_photos")
 
 app.include_router(event_router)
 app.include_router(picturesque_router)
