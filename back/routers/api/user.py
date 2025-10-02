@@ -108,7 +108,7 @@ async def update_request_status(
     try:
         # Предполагаем, что у пользователя есть email поле (можно добавить в модель User)
         # user_email = current_request.user.email  
-        user_email = f"{current_request.user.username}@example.com"  # Заглушка
+        user_email = current_request.user.email  # Заглушка
         
         if update_data.status == RequestStatus.APPROVED:
             await email_sender.send_request_approved_notification(
