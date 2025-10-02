@@ -28,8 +28,6 @@ async def login_user(user_login: UserLogin, db: AsyncSession = Depends(get_db)):
         raise HTTPException(status_code=401, detail="Invalid username or password")
     return user
 
-
-
 @user_router.get("/users/{user_id}/achievements", response_model=List[AchievementResponse])
 async def get_user_achievements(user_id: int, db: AsyncSession = Depends(get_db)):
     achievements = await achievement_crud.get_user_achievements(db, user_id)
