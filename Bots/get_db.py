@@ -60,4 +60,16 @@ def update_event_data_safe(event_id, **kwargs):
             
             return cursor.rowcount
         
-update_event_data_safe(2, description_summ = 'test')
+
+def get_routes(time,difficulty_filter):
+    with psycopg2.connect(**conn_params) as connection:
+        with connection.cursor(cursor_factory=RealDictCursor) as cursor:
+            if difficulty_filter == 'NULL':
+                query = f"SELECT * FROM walking_routes WHERE duration_minutes <= %s"
+                cursor.execute(query, (time,))
+                return cursor.fetchall()
+            else:
+                query = f"SELECT * FROM walking_routes WHERE difficulty = %s AND duration_minutes <= %s"
+                cursor.execute(query, (difficulty_filter,time,))
+                return cursor.fetchall()
+
