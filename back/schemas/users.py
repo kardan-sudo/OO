@@ -29,10 +29,11 @@ class UserResponse(BaseModel):
     username: str
     is_organizer: bool
     is_representative: bool
-    created_at: date
-    updated_at: date
     last_login: Optional[date] = None
     consecutive_days: int
 
     class Config:
         from_attributes = True
+
+class UserID(BaseModel):
+    id: int

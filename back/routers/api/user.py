@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from database.database import get_db
-from schemas.users import UserCreate, UserResponse, UserLogin
+from schemas.users import UserCreate, UserResponse, UserLogin, UserID
 from routers.crud.user import user_crud
 from schemas.achievement import AchievementResponse
 from routers.crud.achievement import achievement_crud
@@ -34,3 +34,11 @@ async def login_user(user_login: UserLogin, db: AsyncSession = Depends(get_db)):
 async def get_user_achievements(user_id: int, db: AsyncSession = Depends(get_db)):
     achievements = await achievement_crud.get_user_achievements(db, user_id)
     return achievements
+
+@user_router.post("/user/me", response_model=UserResponse)  # POST для тела
+async def get_user_by_id(user: UserID, db: AsyncSession = Depends(get_db)):
+    existing_user = await user_crud.get_user_by_id(db, user.id)
+    if existing_user:
+        return UserResponse.from_orm(existing_user)  # Конвертация
+    else:
+        raise HTTPException(status_code=400, detail="User not found")
