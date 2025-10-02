@@ -54,9 +54,6 @@ class ScenicSpotResponse(ScenicSpotBase):
 class ScenicSpotList(BaseModel):
     items: List[ScenicSpotResponse]
     total: int
-    page: int
-    size: int
-    pages: int
     
 class ScenicSpotVerifyUpdate(BaseModel):
     is_verified: bool
