@@ -51,7 +51,7 @@ async def read_events(
         min_rating=min_rating,
         organizer=organizer
     )
-    events = await event_crud.get_events(db, skip=skip, limit=limit, filters=filters)
+    events = await event_crud.get_events(db, filters=filters)
     
     # Добавляем photo_url к каждому событию
     for event in events:
