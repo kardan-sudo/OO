@@ -20,8 +20,6 @@ picturesque_router = APIRouter(prefix="/scenic-spots", tags=["scenic-spots"])
 @picturesque_router.get("/", response_model=ScenicSpotList)
 async def read_scenic_spots(
     db: AsyncSession = Depends(get_db),
-    skip: Optional[int] = Query(0, ge=0, description="Смещение"),
-    limit: Optional[int] = Query(20, ge=1, le=100, description="Лимит"),
     spot_type: Optional[SpotTypeSchema] = Query(None, description="Фильтр по типу места"),
     only_verified: bool = Query(True, description="Только проверенные места")
 ):
@@ -30,8 +28,6 @@ async def read_scenic_spots(
     """
     spots = await scenic_spot_crud.get_scenic_spots(
         db=db,
-        skip=skip,
-        limit=limit,
         spot_type=spot_type.value if spot_type else None,
         only_verified=only_verified
     )
@@ -44,10 +40,7 @@ async def read_scenic_spots(
     
     return ScenicSpotList(
         items=spots,
-        total=total,
-        page=skip // limit + 1,
-        size=limit,
-        pages=(total + limit - 1) // limit
+        total=total
     )
 
 @picturesque_router.post("/", response_model=ScenicSpotResponse, status_code=status.HTTP_201_CREATED)
@@ -77,26 +70,17 @@ async def create_scenic_spot(
 @picturesque_router.get("/unverified", response_model=ScenicSpotList)
 async def read_unverified_scenic_spots(
     db: AsyncSession = Depends(get_db),
-    skip: Optional[int] = Query(0, ge=0, description="Смещение"),
-    limit: Optional[int] = Query(20, ge=1, le=100, description="Лимит")
 ):
     """
     Получить список непроверенных живописных мест с пагинацией
     """
-    spots = await scenic_spot_crud.get_unverified_scenic_spots(db=db, skip=skip, limit=limit)
+    spots = await scenic_spot_crud.get_unverified_scenic_spots(db=db)
     
     total = await scenic_spot_crud.get_unverified_scenic_spots_count(db=db)
-    
-    # Вычисли page и pages
-    page = skip // limit + 1 if limit > 0 else 1
-    pages = (total + limit - 1) // limit if limit > 0 else 0
     
     return ScenicSpotList(
         items=spots,
         total=total,
-        page=page,
-        size=limit,
-        pages=pages
     )
 
 @picturesque_router.patch("/{spot_id}/verify", response_model=ScenicSpotResponse)

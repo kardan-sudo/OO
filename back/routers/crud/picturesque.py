@@ -11,8 +11,6 @@ class ScenicSpotCRUD:
     async def get_scenic_spots(
         self, 
         db: AsyncSession, 
-        skip: int = 0, 
-        limit: int = 100,
         spot_type: Optional[str] = None,
         only_verified: bool = True
     ) -> List[ScenicSpot]:
@@ -24,8 +22,6 @@ class ScenicSpotCRUD:
         if spot_type:
             # Если DB ENUM lowercase, конвертируй: query = query.where(ScenicSpot.spot_type == spot_type.lower())
             query = query.where(ScenicSpot.spot_type == spot_type)
-            
-        query = query.offset(skip).limit(limit)
         
         result = await db.execute(query)
         return result.scalars().all()
@@ -81,8 +77,6 @@ class ScenicSpotCRUD:
     async def get_unverified_scenic_spots(
         self, 
         db: AsyncSession,
-        skip: int = 0,  # Добавлено
-        limit: int = None  # Добавлено (None для всех, если не указано)
     ) -> List[ScenicSpot]:
         """Получить список непроверенных мест с пагинацией"""
         query = select(ScenicSpot).where(
@@ -90,10 +84,7 @@ class ScenicSpotCRUD:
         )
             
         query = query.order_by(ScenicSpot.id.desc())
-        
-        # Добавлена пагинация
-        if limit is not None:
-            query = query.offset(skip).limit(limit)
+
         
         result = await db.execute(query)
         return result.scalars().all()
