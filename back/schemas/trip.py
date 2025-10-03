@@ -11,6 +11,7 @@ class WalkingRouteBase(BaseModel):
     points_of_interest_count: int = Field(0, ge=0, description="Количество интересных мест")
     difficulty: str = Field("medium", description="Сложность маршрута")
     location: Optional[str] = Field(None, max_length=200, description="Локация")
+    url: Optional[str] = None
     photo_url: Optional[str] = None
 
     
