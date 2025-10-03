@@ -263,7 +263,7 @@ def format_route_message(data):
     return f'''
 *{data['title']}*
 
-{emoji} Сложность: {data['difficulty'].capitalize() if data['difficulty'] else 'Не указана'}
+Сложность: {emoji}
 ⏱ Продолжительность: {data['duration_minutes']} минут
 
 {data['description']}

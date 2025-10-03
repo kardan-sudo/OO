@@ -4,10 +4,10 @@ from psycopg2.extras import RealDictCursor
 
 conn_params = {
     "user": "postgres",
-    "password": "123",
-    "host": "localhost",
-    "port": "5432",
-    "database": "postgres"
+    "password": "2418908595",
+    "host": "192.168.3.116",
+    "port": "54320",
+    "database": "sbp"
 }
 def get_event_list():
     event_list = []
@@ -24,7 +24,7 @@ def get_event_list():
 def get_event_data(event_type):
     with psycopg2.connect(**conn_params) as connection:
         with connection.cursor(cursor_factory=RealDictCursor) as cursor:
-            cursor.execute(f"select id,title,event_type,start_date,end_date,address,description,website,phone,description_summ FROM public.events where event_type = '{event_type}';")
+            cursor.execute(f"select id,title,event_type,start_date,end_date,address,description,website,phone,description_summ FROM public.events where event_type = '{event_type}' ORDER BY start_date ASC;")
             records = cursor.fetchall()
 
     return records
