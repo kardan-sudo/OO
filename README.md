@@ -1,1 +1,1 @@
-# OO
+# Oryol Region Championship
