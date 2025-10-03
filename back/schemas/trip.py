@@ -3,6 +3,7 @@ from typing import Optional, List
 from datetime import datetime
 
 class WalkingRouteBase(BaseModel):
+    id: int
     title: str = Field(..., min_length=1, max_length=200, description="Название маршрута")
     description: Optional[str] = Field(None, description="Описание маршрута")
     distance_km: float = Field(..., gt=0, description="Протяженность в км")
@@ -10,13 +11,22 @@ class WalkingRouteBase(BaseModel):
     points_of_interest_count: int = Field(0, ge=0, description="Количество интересных мест")
     difficulty: str = Field("medium", description="Сложность маршрута")
     location: Optional[str] = Field(None, max_length=200, description="Локация")
+    photo_url: Optional[str] = None
 
+    
+    
     @validator('difficulty')
     def validate_difficulty(cls, v):
         allowed_difficulties = ['easy', 'medium', 'hard']
         if v not in allowed_difficulties:
             raise ValueError(f'Difficulty must be one of {allowed_difficulties}')
         return v
+    
+    @validator('photo_url', pre=True, always=True)
+    def compute_photo_url(cls, v, values):
+        if 'id' in values:
+            return f"http://192.168.3.116:8000/static/routes/{values['id']}.png"
+        return None
 
 class WalkingRouteCreate(WalkingRouteBase):
     pass
